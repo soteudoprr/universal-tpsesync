@@ -211,6 +211,67 @@ end
 local saveBtn = createButton("SaveButton", "💾 Salvar Local", UDim2.new(0.05, 0, 0, 10), movementPanel)
 local returnBtn = createButton("ReturnButton", "⚡ Desync Tp v2", UDim2.new(0.05, 0, 0, 60), movementPanel)
 
+-- Criar controle de velocidade
+local speedFrame = Instance.new("Frame")
+speedFrame.Name = "SpeedFrame"
+speedFrame.Size = UDim2.new(0.9, 0, 0, 50)
+speedFrame.Position = UDim2.new(0.05, 0, 0, 115)
+speedFrame.BackgroundColor3 = Color3.fromRGB(55, 55, 65)
+speedFrame.BorderSizePixel = 0
+speedFrame.ZIndex = 102
+speedFrame.Parent = movementPanel
+
+local speedCorner = Instance.new("UICorner")
+speedCorner.CornerRadius = UDim.new(0, 8)
+speedCorner.Parent = speedFrame
+
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Name = "SpeedLabel"
+speedLabel.Size = UDim2.new(0.5, 0, 1, 0)
+speedLabel.Position = UDim2.new(0, 10, 0, 0)
+speedLabel.BackgroundTransparency = 1
+speedLabel.Text = "🚀 Velocidade: 16"
+speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedLabel.TextSize = 13
+speedLabel.Font = Enum.Font.GothamBold
+speedLabel.TextXAlignment = Enum.TextXAlignment.Left
+speedLabel.ZIndex = 103
+speedLabel.Parent = speedFrame
+
+local decreaseBtn = Instance.new("TextButton")
+decreaseBtn.Name = "DecreaseButton"
+decreaseBtn.Size = UDim2.new(0, 35, 0, 35)
+decreaseBtn.Position = UDim2.new(1, -85, 0.5, -17.5)
+decreaseBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+decreaseBtn.BorderSizePixel = 0
+decreaseBtn.Text = "-"
+decreaseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+decreaseBtn.TextSize = 20
+decreaseBtn.Font = Enum.Font.GothamBold
+decreaseBtn.ZIndex = 103
+decreaseBtn.Parent = speedFrame
+
+local decreaseCorner = Instance.new("UICorner")
+decreaseCorner.CornerRadius = UDim.new(0, 6)
+decreaseCorner.Parent = decreaseBtn
+
+local increaseBtn = Instance.new("TextButton")
+increaseBtn.Name = "IncreaseButton"
+increaseBtn.Size = UDim2.new(0, 35, 0, 35)
+increaseBtn.Position = UDim2.new(1, -45, 0.5, -17.5)
+increaseBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
+increaseBtn.BorderSizePixel = 0
+increaseBtn.Text = "+"
+increaseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+increaseBtn.TextSize = 20
+increaseBtn.Font = Enum.Font.GothamBold
+increaseBtn.ZIndex = 103
+increaseBtn.Parent = speedFrame
+
+local increaseCorner = Instance.new("UICorner")
+increaseCorner.CornerRadius = UDim.new(0, 6)
+increaseCorner.Parent = increaseBtn
+
 -- Criar botões de Settings
 local espBtn = createButton("ESPButton", "👁️ Wall Esp", UDim2.new(0.05, 0, 0, 10), settingsPanel)
 local serverHopBtn = createButton("ServerHopButton", "🌐 Server Hop", UDim2.new(0.05, 0, 0, 60), settingsPanel)
@@ -240,6 +301,7 @@ local currentCategory = nil
 local savedPosition = nil
 local espEnabled = false
 local espHighlights = {}
+local currentSpeed = 16
 
 -- Sistema de arrastar a bolinha
 local dragging = false
@@ -319,7 +381,7 @@ local function togglePanel()
     if panelOpen then
         panel.Visible = true
         panel.Position = UDim2.new(0.5, -140, 1, 0)
-        showMainMenu()
+        showCategory("movement") -- Abre direto em Movement
         local tween = TweenService:Create(panel, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
             Position = UDim2.new(0.5, -140, 0.5, -160)
         })
@@ -378,6 +440,40 @@ returnBtn.MouseButton1Click:Connect(function()
         returnBtn.Text = "❌ Sem posição"
         wait(1)
         returnBtn.Text = "⚡ Desync Tp v2"
+    end
+end)
+
+-- Função para atualizar velocidade
+local function updateSpeed()
+    local character = player.Character
+    if character and character:FindFirstChild("Humanoid") then
+        character.Humanoid.WalkSpeed = currentSpeed
+    end
+end
+
+-- Diminuir velocidade
+decreaseBtn.MouseButton1Click:Connect(function()
+    if currentSpeed > 16 then
+        currentSpeed = currentSpeed - 1
+        speedLabel.Text = "🚀 Velocidade: " .. currentSpeed
+        updateSpeed()
+    end
+end)
+
+-- Aumentar velocidade
+increaseBtn.MouseButton1Click:Connect(function()
+    if currentSpeed < 30 then
+        currentSpeed = currentSpeed + 1
+        speedLabel.Text = "🚀 Velocidade: " .. currentSpeed
+        updateSpeed()
+    end
+end)
+
+-- Manter velocidade ao respawnar
+player.CharacterAdded:Connect(function(character)
+    wait(0.5)
+    if character:FindFirstChild("Humanoid") then
+        character.Humanoid.WalkSpeed = currentSpeed
     end
 end)
 
@@ -520,16 +616,30 @@ for _, button in pairs(categoryButtons) do
 end
 
 -- Efeito hover nos botões de ação
-local actionButtons = {saveBtn, returnBtn, espBtn, serverHopBtn, backBtn}
+local actionButtons = {saveBtn, returnBtn, espBtn, serverHopBtn, backBtn, decreaseBtn, increaseBtn}
 for _, button in pairs(actionButtons) do
     button.MouseEnter:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.2), {
-            Size = UDim2.new(button.Size.X.Scale + 0.02, 0, 0, button.Size.Y.Offset + 2)
-        }):Play()
+        if button == decreaseBtn or button == increaseBtn then
+            TweenService:Create(button, TweenInfo.new(0.2), {
+                Size = UDim2.new(0, 38, 0, 38)
+            }):Play()
+        elseif button == backBtn then
+            TweenService:Create(button, TweenInfo.new(0.2), {
+                Size = UDim2.new(0.32, 0, 0, 37)
+            }):Play()
+        else
+            TweenService:Create(button, TweenInfo.new(0.2), {
+                Size = UDim2.new(button.Size.X.Scale + 0.02, 0, 0, button.Size.Y.Offset + 2)
+            }):Play()
+        end
     end)
     
     button.MouseLeave:Connect(function()
-        if button == backBtn then
+        if button == decreaseBtn or button == increaseBtn then
+            TweenService:Create(button, TweenInfo.new(0.2), {
+                Size = UDim2.new(0, 35, 0, 35)
+            }):Play()
+        elseif button == backBtn then
             TweenService:Create(button, TweenInfo.new(0.2), {
                 Size = UDim2.new(0.3, 0, 0, 35)
             }):Play()
