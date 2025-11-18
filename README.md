@@ -119,13 +119,13 @@ titleCorner.Parent = title
 local function createCategoryButton(name, text, position, icon)
     local button = Instance.new("TextButton")
     button.Name = name
-    button.Size = UDim2.new(0.45, 0, 0, 60)
+    button.Size = UDim2.new(0.42, 0, 0, 45)
     button.Position = position
-    button.BackgroundColor3 = Color3.fromRGB(60, 120, 220)
+    button.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
     button.BorderSizePixel = 0
     button.Text = text
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.TextSize = 15
+    button.TextSize = 14
     button.Font = Enum.Font.GothamBold
     button.ZIndex = 102
     button.Parent = panel
@@ -134,12 +134,18 @@ local function createCategoryButton(name, text, position, icon)
     btnCorner.CornerRadius = UDim.new(0, 10)
     btnCorner.Parent = button
     
+    local btnStroke = Instance.new("UIStroke")
+    btnStroke.Color = Color3.fromRGB(0, 0, 0)
+    btnStroke.Thickness = 2
+    btnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    btnStroke.Parent = button
+    
     return button
 end
 
 -- Criar categorias
 local movementBtn = createCategoryButton("MovementButton", "Movement", UDim2.new(0.05, 0, 0, 60), "")
-local settingsBtn = createCategoryButton("SettingsButton", "Settings", UDim2.new(0.5, 0, 0, 60), "")
+local settingsBtn = createCategoryButton("SettingsButton", "Settings", UDim2.new(0.53, 0, 0, 60), "")
 
 -- Criar painéis de categorias
 local function createCategoryPanel(name)
@@ -170,7 +176,7 @@ local function createButton(name, text, position, parent)
     button.Name = name
     button.Size = UDim2.new(0.9, 0, 0, 40)
     button.Position = position
-    button.BackgroundColor3 = Color3.fromRGB(70, 130, 230)
+    button.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
     button.BorderSizePixel = 0
     button.Text = text
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -182,6 +188,12 @@ local function createButton(name, text, position, parent)
     local btnCorner = Instance.new("UICorner")
     btnCorner.CornerRadius = UDim.new(0, 8)
     btnCorner.Parent = button
+    
+    local btnStroke = Instance.new("UIStroke")
+    btnStroke.Color = Color3.fromRGB(0, 0, 0)
+    btnStroke.Thickness = 2
+    btnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    btnStroke.Parent = button
     
     return button
 end
@@ -221,7 +233,7 @@ local decreaseBtn = Instance.new("TextButton")
 decreaseBtn.Name = "DecreaseButton"
 decreaseBtn.Size = UDim2.new(0, 35, 0, 35)
 decreaseBtn.Position = UDim2.new(1, -85, 0.5, -17.5)
-decreaseBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+decreaseBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
 decreaseBtn.BorderSizePixel = 0
 decreaseBtn.Text = "-"
 decreaseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -234,11 +246,17 @@ local decreaseCorner = Instance.new("UICorner")
 decreaseCorner.CornerRadius = UDim.new(0, 6)
 decreaseCorner.Parent = decreaseBtn
 
+local decreaseStroke = Instance.new("UIStroke")
+decreaseStroke.Color = Color3.fromRGB(0, 0, 0)
+decreaseStroke.Thickness = 2
+decreaseStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+decreaseStroke.Parent = decreaseBtn
+
 local increaseBtn = Instance.new("TextButton")
 increaseBtn.Name = "IncreaseButton"
 increaseBtn.Size = UDim2.new(0, 35, 0, 35)
 increaseBtn.Position = UDim2.new(1, -45, 0.5, -17.5)
-increaseBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
+increaseBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
 increaseBtn.BorderSizePixel = 0
 increaseBtn.Text = "+"
 increaseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -251,6 +269,12 @@ local increaseCorner = Instance.new("UICorner")
 increaseCorner.CornerRadius = UDim.new(0, 6)
 increaseCorner.Parent = increaseBtn
 
+local increaseStroke = Instance.new("UIStroke")
+increaseStroke.Color = Color3.fromRGB(0, 0, 0)
+increaseStroke.Thickness = 2
+increaseStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+increaseStroke.Parent = increaseBtn
+
 -- Criar botões de Settings
 local espBtn = createButton("ESPButton", "Wall Esp", UDim2.new(0.05, 0, 0, 10), settingsPanel)
 local serverHopBtn = createButton("ServerHopButton", "Server Hop", UDim2.new(0.05, 0, 0, 60), settingsPanel)
@@ -260,7 +284,7 @@ local backBtn = Instance.new("TextButton")
 backBtn.Name = "BackButton"
 backBtn.Size = UDim2.new(0.3, 0, 0, 35)
 backBtn.Position = UDim2.new(0.35, 0, 1, -45)
-backBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+backBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
 backBtn.BorderSizePixel = 0
 backBtn.Text = "Voltar"
 backBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -273,6 +297,12 @@ backBtn.Parent = panel
 local backCorner = Instance.new("UICorner")
 backCorner.CornerRadius = UDim.new(0, 8)
 backCorner.Parent = backBtn
+
+local backStroke = Instance.new("UIStroke")
+backStroke.Color = Color3.fromRGB(0, 0, 0)
+backStroke.Thickness = 2
+backStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+backStroke.Parent = backBtn
 
 -- Variáveis de controle
 local panelOpen = false
@@ -362,8 +392,8 @@ local function showCategory(categoryName)
     settingsPanel.Visible = false
     backBtn.Visible = true
     
-    movementBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 220)
-    settingsBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 220)
+    movementBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+    settingsBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
     
     if categoryName == "movement" then
         movementPanel.Visible = true
@@ -386,8 +416,8 @@ local function showMainMenu()
     currentCategory = nil
     title.Text = "Soute Hub"
     
-    movementBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 220)
-    settingsBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 220)
+    movementBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+    settingsBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
 end
 
 -- Função para abrir/fechar painel
@@ -438,9 +468,9 @@ saveBtn.MouseButton1Click:Connect(function()
     local character = player.Character
     if character and character:FindFirstChild("HumanoidRootPart") then
         savedPosition = character.HumanoidRootPart.CFrame
-        saveBtn.Text = "✅ Local Salvo!"
+        saveBtn.Text = "Local Salvo!"
         wait(1)
-        saveBtn.Text = "💾 Salvar Local"
+        saveBtn.Text = "Salvar Local"
     end
 end)
 
@@ -449,13 +479,13 @@ returnBtn.MouseButton1Click:Connect(function()
     local character = player.Character
     if character and character:FindFirstChild("HumanoidRootPart") and savedPosition then
         character.HumanoidRootPart.CFrame = savedPosition
-        returnBtn.Text = "✅ Teleportado!"
+        returnBtn.Text = "Teleportado!"
         wait(1)
-        returnBtn.Text = "⚡ Desync Tp v2"
+        returnBtn.Text = "Desync Tp v2"
     else
-        returnBtn.Text = "❌ Sem posição"
+        returnBtn.Text = "Sem posição"
         wait(1)
-        returnBtn.Text = "⚡ Desync Tp v2"
+        returnBtn.Text = "Desync Tp v2"
     end
 end)
 
@@ -471,7 +501,7 @@ end
 decreaseBtn.MouseButton1Click:Connect(function()
     if currentSpeed > 16 then
         currentSpeed = currentSpeed - 1
-        speedLabel.Text = "🚀 Velocidade: " .. currentSpeed
+        speedLabel.Text = "Velocidade: " .. currentSpeed
         updateSpeed()
     end
 end)
@@ -480,7 +510,7 @@ end)
 increaseBtn.MouseButton1Click:Connect(function()
     if currentSpeed < 30 then
         currentSpeed = currentSpeed + 1
-        speedLabel.Text = "🚀 Velocidade: " .. currentSpeed
+        speedLabel.Text = "Velocidade: " .. currentSpeed
         updateSpeed()
     end
 end)
@@ -540,7 +570,7 @@ espBtn.MouseButton1Click:Connect(function()
     espEnabled = not espEnabled
     
     if espEnabled then
-        espBtn.Text = "👁️ Wall Esp [ON]"
+        espBtn.Text = "Wall Esp [ON]"
         espBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
         
         for _, targetPlayer in pairs(Players:GetPlayers()) do
@@ -555,8 +585,8 @@ espBtn.MouseButton1Click:Connect(function()
             end
         end)
     else
-        espBtn.Text = "👁️ Wall Esp"
-        espBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 230)
+        espBtn.Text = "Wall Esp"
+        espBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
         
         for targetPlayer, _ in pairs(espHighlights) do
             removeESP(targetPlayer)
@@ -566,7 +596,7 @@ end)
 
 -- Função Server Hop
 serverHopBtn.MouseButton1Click:Connect(function()
-    serverHopBtn.Text = "⏳ Procurando..."
+    serverHopBtn.Text = "Procurando..."
     serverHopBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 50)
     
     local success, result = pcall(function()
@@ -600,18 +630,18 @@ serverHopBtn.MouseButton1Click:Connect(function()
             local randomServer = servers[math.random(1, #servers)]
             TeleportService:TeleportToPlaceInstance(currentGameId, randomServer, player)
         else
-            serverHopBtn.Text = "❌ Sem servidores"
+            serverHopBtn.Text = "Sem servidores"
             wait(2)
-            serverHopBtn.Text = "🌐 Server Hop"
-            serverHopBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 230)
+            serverHopBtn.Text = "Server Hop"
+            serverHopBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
         end
     end)
     
     if not success then
-        serverHopBtn.Text = "❌ Erro"
+        serverHopBtn.Text = "Erro"
         wait(2)
-        serverHopBtn.Text = "🌐 Server Hop"
-        serverHopBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 230)
+        serverHopBtn.Text = "Server Hop"
+        serverHopBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
     end
 end)
 
@@ -620,13 +650,13 @@ local categoryButtons = {movementBtn, settingsBtn}
 for _, button in pairs(categoryButtons) do
     button.MouseEnter:Connect(function()
         TweenService:Create(button, TweenInfo.new(0.2), {
-            Size = UDim2.new(0.47, 0, 0, 63)
+            Size = UDim2.new(0.44, 0, 0, 47)
         }):Play()
     end)
     
     button.MouseLeave:Connect(function()
         TweenService:Create(button, TweenInfo.new(0.2), {
-            Size = UDim2.new(0.45, 0, 0, 60)
+            Size = UDim2.new(0.42, 0, 0, 45)
         }):Play()
     end)
 end
