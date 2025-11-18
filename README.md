@@ -33,6 +33,13 @@ local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(1, 0)
 corner.Parent = orb
 
+-- Adicionar borda preta
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(0, 0, 0)
+stroke.Thickness = 3
+stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+stroke.Parent = orb
+
 -- Adicionar gradiente
 local gradient = Instance.new("UIGradient")
 gradient.Color = ColorSequence.new{
