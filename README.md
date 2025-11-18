@@ -1,4 +1,4 @@
--- Script para Roblox Studio - Bolinha Móvel com Server Hop
+-- Script para Roblox Studio - Bolinha Móvel com Categorias
 -- Coloque este script em StarterGui ou StarterPlayerScripts
 
 local Players = game:GetService("Players")
@@ -36,7 +36,7 @@ corner.Parent = orb
 -- Adicionar borda preta
 local stroke = Instance.new("UIStroke")
 stroke.Color = Color3.fromRGB(0, 0, 0)
-stroke.Thickness = 3
+stroke.Thickness = 4
 stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 stroke.Parent = orb
 
@@ -81,11 +81,11 @@ emojiLabel.Font = Enum.Font.GothamBold
 emojiLabel.ZIndex = 10
 emojiLabel.Parent = orb
 
--- Criar painel de controle
+-- Criar painel de controle principal
 local panel = Instance.new("Frame")
 panel.Name = "ControlPanel"
-panel.Size = UDim2.new(0, 250, 0, 270)
-panel.Position = UDim2.new(0.5, -125, 0.5, -135)
+panel.Size = UDim2.new(0, 280, 0, 320)
+panel.Position = UDim2.new(0.5, -140, 0.5, -160)
 panel.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 panel.BackgroundTransparency = 0.3
 panel.BorderSizePixel = 0
@@ -100,11 +100,11 @@ panelCorner.Parent = panel
 -- Título do painel
 local title = Instance.new("TextLabel")
 title.Name = "Title"
-title.Size = UDim2.new(1, 0, 0, 40)
+title.Size = UDim2.new(1, 0, 0, 45)
 title.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
 title.BackgroundTransparency = 0.3
 title.BorderSizePixel = 0
-title.Text = "Controles"
+title.Text = "Menu Principal"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextSize = 18
 title.Font = Enum.Font.GothamBold
@@ -115,20 +115,90 @@ local titleCorner = Instance.new("UICorner")
 titleCorner.CornerRadius = UDim.new(0, 12)
 titleCorner.Parent = title
 
--- Função para criar botões
-local function createButton(name, text, position)
+-- Criar botões de categoria
+local function createCategoryButton(name, text, position, icon)
     local button = Instance.new("TextButton")
     button.Name = name
-    button.Size = UDim2.new(0.85, 0, 0, 40)
+    button.Size = UDim2.new(0.45, 0, 0, 60)
     button.Position = position
     button.BackgroundColor3 = Color3.fromRGB(60, 120, 220)
+    button.BorderSizePixel = 0
+    button.Text = ""
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.TextSize = 14
+    button.Font = Enum.Font.GothamBold
+    button.ZIndex = 102
+    button.Parent = panel
+    
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 10)
+    btnCorner.Parent = button
+    
+    local iconLabel = Instance.new("TextLabel")
+    iconLabel.Size = UDim2.new(1, 0, 0, 30)
+    iconLabel.Position = UDim2.new(0, 0, 0, 5)
+    iconLabel.BackgroundTransparency = 1
+    iconLabel.Text = icon
+    iconLabel.TextSize = 24
+    iconLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    iconLabel.ZIndex = 103
+    iconLabel.Parent = button
+    
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 0, 20)
+    textLabel.Position = UDim2.new(0, 0, 1, -25)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = text
+    textLabel.TextSize = 13
+    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textLabel.Font = Enum.Font.GothamBold
+    textLabel.ZIndex = 103
+    textLabel.Parent = button
+    
+    return button
+end
+
+-- Criar categorias
+local movementBtn = createCategoryButton("MovementButton", "Movement", UDim2.new(0.05, 0, 0, 60), "🏃")
+local settingsBtn = createCategoryButton("SettingsButton", "Settings", UDim2.new(0.5, 0, 0, 60), "⚙️")
+
+-- Criar painéis de categorias
+local function createCategoryPanel(name)
+    local catPanel = Instance.new("Frame")
+    catPanel.Name = name
+    catPanel.Size = UDim2.new(0.95, 0, 0, 180)
+    catPanel.Position = UDim2.new(0.025, 0, 0, 130)
+    catPanel.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    catPanel.BackgroundTransparency = 0.5
+    catPanel.BorderSizePixel = 0
+    catPanel.Visible = false
+    catPanel.ZIndex = 101
+    catPanel.Parent = panel
+    
+    local catCorner = Instance.new("UICorner")
+    catCorner.CornerRadius = UDim.new(0, 10)
+    catCorner.Parent = catPanel
+    
+    return catPanel
+end
+
+local movementPanel = createCategoryPanel("MovementPanel")
+local settingsPanel = createCategoryPanel("SettingsPanel")
+
+-- Função para criar botões nas categorias
+local function createButton(name, text, position, parent)
+    local button = Instance.new("TextButton")
+    button.Name = name
+    button.Size = UDim2.new(0.9, 0, 0, 40)
+    button.Position = position
+    button.BackgroundColor3 = Color3.fromRGB(70, 130, 230)
     button.BorderSizePixel = 0
     button.Text = text
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
     button.TextSize = 14
     button.Font = Enum.Font.GothamBold
     button.ZIndex = 102
-    button.Parent = panel
+    button.Parent = parent
     
     local btnCorner = Instance.new("UICorner")
     btnCorner.CornerRadius = UDim.new(0, 8)
@@ -137,19 +207,41 @@ local function createButton(name, text, position)
     return button
 end
 
--- Criar botões
-local saveBtn = createButton("SaveButton", "Salvar Local", UDim2.new(0.075, 0, 0, 55))
-local returnBtn = createButton("ReturnButton", "Desync Tp v2", UDim2.new(0.075, 0, 0, 105))
-local espBtn = createButton("ESPButton", "Wall Esp", UDim2.new(0.075, 0, 0, 155))
-local serverHopBtn = createButton("ServerHopButton", "Server Hop", UDim2.new(0.075, 0, 0, 205))
+-- Criar botões de Movement
+local saveBtn = createButton("SaveButton", "💾 Salvar Local", UDim2.new(0.05, 0, 0, 10), movementPanel)
+local returnBtn = createButton("ReturnButton", "⚡ Desync Tp v2", UDim2.new(0.05, 0, 0, 60), movementPanel)
+
+-- Criar botões de Settings
+local espBtn = createButton("ESPButton", "👁️ Wall Esp", UDim2.new(0.05, 0, 0, 10), settingsPanel)
+local serverHopBtn = createButton("ServerHopButton", "🌐 Server Hop", UDim2.new(0.05, 0, 0, 60), settingsPanel)
+
+-- Botão para voltar
+local backBtn = Instance.new("TextButton")
+backBtn.Name = "BackButton"
+backBtn.Size = UDim2.new(0.3, 0, 0, 35)
+backBtn.Position = UDim2.new(0.35, 0, 1, -45)
+backBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+backBtn.BorderSizePixel = 0
+backBtn.Text = "← Voltar"
+backBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+backBtn.TextSize = 13
+backBtn.Font = Enum.Font.GothamBold
+backBtn.Visible = false
+backBtn.ZIndex = 102
+backBtn.Parent = panel
+
+local backCorner = Instance.new("UICorner")
+backCorner.CornerRadius = UDim.new(0, 8)
+backCorner.Parent = backBtn
 
 -- Variáveis de controle
 local panelOpen = false
+local currentCategory = nil
 local savedPosition = nil
 local espEnabled = false
 local espHighlights = {}
 
--- Sistema de arrastar a bolinha (mobile e PC)
+-- Sistema de arrastar a bolinha
 local dragging = false
 local dragInput
 local dragStart
@@ -186,32 +278,81 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
+-- Função para mostrar categoria
+local function showCategory(categoryName)
+    movementPanel.Visible = false
+    settingsPanel.Visible = false
+    backBtn.Visible = true
+    
+    movementBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 220)
+    settingsBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 220)
+    
+    if categoryName == "movement" then
+        movementPanel.Visible = true
+        movementBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
+        title.Text = "Movement"
+    elseif categoryName == "settings" then
+        settingsPanel.Visible = true
+        settingsBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
+        title.Text = "Settings"
+    end
+    
+    currentCategory = categoryName
+end
+
+-- Função para voltar ao menu principal
+local function showMainMenu()
+    movementPanel.Visible = false
+    settingsPanel.Visible = false
+    backBtn.Visible = false
+    currentCategory = nil
+    title.Text = "Menu Principal"
+    
+    movementBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 220)
+    settingsBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 220)
+end
+
 -- Função para abrir/fechar painel
 local function togglePanel()
     panelOpen = not panelOpen
     
     if panelOpen then
         panel.Visible = true
-        panel.Position = UDim2.new(0.5, -125, 1, 0)
+        panel.Position = UDim2.new(0.5, -140, 1, 0)
+        showMainMenu()
         local tween = TweenService:Create(panel, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
-            Position = UDim2.new(0.5, -125, 0.5, -135)
+            Position = UDim2.new(0.5, -140, 0.5, -160)
         })
         tween:Play()
     else
         local tween = TweenService:Create(panel, TweenInfo.new(0.2, Enum.EasingStyle.Back), {
-            Position = UDim2.new(0.5, -125, 1, 0)
+            Position = UDim2.new(0.5, -140, 1, 0)
         })
         tween:Play()
         wait(0.2)
         panel.Visible = false
+        showMainMenu()
     end
 end
 
--- Clique na bolinha para abrir/fechar painel
+-- Clique na bolinha
 orb.MouseButton1Click:Connect(function()
     if not dragging then
         togglePanel()
     end
+end)
+
+-- Cliques nas categorias
+movementBtn.MouseButton1Click:Connect(function()
+    showCategory("movement")
+end)
+
+settingsBtn.MouseButton1Click:Connect(function()
+    showCategory("settings")
+end)
+
+backBtn.MouseButton1Click:Connect(function()
+    showMainMenu()
 end)
 
 -- Função salvar posição
@@ -221,7 +362,7 @@ saveBtn.MouseButton1Click:Connect(function()
         savedPosition = character.HumanoidRootPart.CFrame
         saveBtn.Text = "✅ Local Salvo!"
         wait(1)
-        saveBtn.Text = "Salvar Local"
+        saveBtn.Text = "💾 Salvar Local"
     end
 end)
 
@@ -232,11 +373,11 @@ returnBtn.MouseButton1Click:Connect(function()
         character.HumanoidRootPart.CFrame = savedPosition
         returnBtn.Text = "✅ Teleportado!"
         wait(1)
-        returnBtn.Text = "Desync Tp v2"
+        returnBtn.Text = "⚡ Desync Tp v2"
     else
         returnBtn.Text = "❌ Sem posição"
         wait(1)
-        returnBtn.Text = "Desync Tp v2"
+        returnBtn.Text = "⚡ Desync Tp v2"
     end
 end)
 
@@ -248,12 +389,10 @@ local function createESP(targetPlayer)
         local character = targetPlayer.Character
         if not character then return end
         
-        -- Remover ESP antigo se existir
         if espHighlights[targetPlayer] then
             espHighlights[targetPlayer]:Destroy()
         end
         
-        -- Criar Highlight
         local highlight = Instance.new("Highlight")
         highlight.Name = "ESP_Highlight"
         highlight.FillColor = Color3.fromRGB(255, 50, 50)
@@ -268,7 +407,6 @@ local function createESP(targetPlayer)
     
     setupESP()
     
-    -- Reconectar quando o personagem respawnar
     targetPlayer.CharacterAdded:Connect(function()
         if espEnabled then
             wait(0.5)
@@ -290,15 +428,13 @@ espBtn.MouseButton1Click:Connect(function()
     espEnabled = not espEnabled
     
     if espEnabled then
-        espBtn.Text = "Wall Esp [ON]"
+        espBtn.Text = "👁️ Wall Esp [ON]"
         espBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
         
-        -- Ativar ESP para todos os jogadores
         for _, targetPlayer in pairs(Players:GetPlayers()) do
             createESP(targetPlayer)
         end
         
-        -- Ativar para novos jogadores
         Players.PlayerAdded:Connect(function(targetPlayer)
             if espEnabled then
                 targetPlayer.CharacterAdded:Wait()
@@ -307,10 +443,9 @@ espBtn.MouseButton1Click:Connect(function()
             end
         end)
     else
-        espBtn.Text = "Wall Esp"
-        espBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 220)
+        espBtn.Text = "👁️ Wall Esp"
+        espBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 230)
         
-        -- Remover ESP de todos
         for targetPlayer, _ in pairs(espHighlights) do
             removeESP(targetPlayer)
         end
@@ -326,7 +461,6 @@ serverHopBtn.MouseButton1Click:Connect(function()
         local currentGameId = game.PlaceId
         local servers = {}
         
-        -- Buscar servidores disponíveis
         local cursor = ""
         repeat
             local success, page = pcall(function()
@@ -350,38 +484,59 @@ serverHopBtn.MouseButton1Click:Connect(function()
             end
         until cursor == ""
         
-        -- Teleportar para servidor aleatório
         if #servers > 0 then
             local randomServer = servers[math.random(1, #servers)]
             TeleportService:TeleportToPlaceInstance(currentGameId, randomServer, player)
         else
             serverHopBtn.Text = "❌ Sem servidores"
             wait(2)
-            serverHopBtn.Text = "Server Hop"
-            serverHopBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 220)
+            serverHopBtn.Text = "🌐 Server Hop"
+            serverHopBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 230)
         end
     end)
     
     if not success then
         serverHopBtn.Text = "❌ Erro"
         wait(2)
-        serverHopBtn.Text = "Server Hop"
-        serverHopBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 220)
+        serverHopBtn.Text = "🌐 Server Hop"
+        serverHopBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 230)
     end
 end)
 
--- Efeito hover nos botões
-local buttons = {saveBtn, returnBtn, espBtn, serverHopBtn}
-for _, button in pairs(buttons) do
+-- Efeito hover nos botões de categoria
+local categoryButtons = {movementBtn, settingsBtn}
+for _, button in pairs(categoryButtons) do
     button.MouseEnter:Connect(function()
         TweenService:Create(button, TweenInfo.new(0.2), {
-            Size = UDim2.new(0.88, 0, 0, 42)
+            Size = UDim2.new(0.47, 0, 0, 63)
         }):Play()
     end)
     
     button.MouseLeave:Connect(function()
         TweenService:Create(button, TweenInfo.new(0.2), {
-            Size = UDim2.new(0.85, 0, 0, 40)
+            Size = UDim2.new(0.45, 0, 0, 60)
         }):Play()
+    end)
+end
+
+-- Efeito hover nos botões de ação
+local actionButtons = {saveBtn, returnBtn, espBtn, serverHopBtn, backBtn}
+for _, button in pairs(actionButtons) do
+    button.MouseEnter:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.2), {
+            Size = UDim2.new(button.Size.X.Scale + 0.02, 0, 0, button.Size.Y.Offset + 2)
+        }):Play()
+    end)
+    
+    button.MouseLeave:Connect(function()
+        if button == backBtn then
+            TweenService:Create(button, TweenInfo.new(0.2), {
+                Size = UDim2.new(0.3, 0, 0, 35)
+            }):Play()
+        else
+            TweenService:Create(button, TweenInfo.new(0.2), {
+                Size = UDim2.new(0.9, 0, 0, 40)
+            }):Play()
+        end
     end)
 end
