@@ -1,3 +1,6 @@
+-- Script para Roblox Studio - Bolinha Móvel com Server Hop
+-- Coloque este script em StarterGui ou StarterPlayerScripts
+
 local Players = game:GetService("Players")
 local TeleportService = game:GetService("TeleportService")
 local UserInputService = game:GetService("UserInputService")
@@ -48,7 +51,7 @@ targetIcon.AnchorPoint = Vector2.new(0.5, 0.5)
 targetIcon.BackgroundTransparency = 1
 targetIcon.Image = "rbxassetid://8964489645"
 targetIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
-targetIcon.ScaleType = Enum.ScaleType.Crop
+targetIcon.ScaleType = Enum.ScaleType.Fit
 targetIcon.ZIndex = 11
 targetIcon.Parent = orb
 
@@ -56,6 +59,20 @@ targetIcon.Parent = orb
 local imageCorner = Instance.new("UICorner")
 imageCorner.CornerRadius = UDim.new(1, 0)
 imageCorner.Parent = targetIcon
+
+-- Adicionar texto emoji como alternativa caso a imagem não carregue
+local emojiLabel = Instance.new("TextLabel")
+emojiLabel.Name = "EmojiIcon"
+emojiLabel.Size = UDim2.new(1, 0, 1, 0)
+emojiLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+emojiLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+emojiLabel.BackgroundTransparency = 1
+emojiLabel.Text = "🎯"
+emojiLabel.TextSize = 35
+emojiLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+emojiLabel.Font = Enum.Font.GothamBold
+emojiLabel.ZIndex = 10
+emojiLabel.Parent = orb
 
 -- Criar painel de controle
 local panel = Instance.new("Frame")
