@@ -39,31 +39,23 @@ gradient.Color = ColorSequence.new{
 gradient.Rotation = 45
 gradient.Parent = orb
 
--- Adicionar imagem do caveira
-local orbImage = Instance.new("ImageLabel")
-orbImage.Name = "OrbImage"
-orbImage.Size = UDim2.new(0.7, 0, 0.7, 0)
-orbImage.Position = UDim2.new(0.5, 0, 0.5, 0)
-orbImage.AnchorPoint = Vector2.new(0.5, 0.5)
-orbImage.BackgroundTransparency = 1
-orbImage.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-orbImage.ImageColor3 = Color3.fromRGB(255, 255, 255)
-orbImage.ScaleType = Enum.ScaleType.Fit
-orbImage.ZIndex = 11
-orbImage.Parent = orb
-
 -- Criar ícone de mira/alvo no centro (estilo caveira com mira)
 local targetIcon = Instance.new("ImageLabel")
 targetIcon.Name = "TargetIcon"
-targetIcon.Size = UDim2.new(0.85, 0, 0.85, 0)
+targetIcon.Size = UDim2.new(1, 0, 1, 0)
 targetIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
 targetIcon.AnchorPoint = Vector2.new(0.5, 0.5)
 targetIcon.BackgroundTransparency = 1
-targetIcon.Image = "rbxassetid://2795572155" -- Ícone de mira/crosshair
-targetIcon.ImageColor3 = Color3.fromRGB(255, 50, 50)
-targetIcon.ScaleType = Enum.ScaleType.Fit
+targetIcon.Image = "rbxassetid://8964489645"
+targetIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+targetIcon.ScaleType = Enum.ScaleType.Crop
 targetIcon.ZIndex = 11
 targetIcon.Parent = orb
+
+-- Arredondar a imagem também
+local imageCorner = Instance.new("UICorner")
+imageCorner.CornerRadius = UDim.new(1, 0)
+imageCorner.Parent = targetIcon
 
 -- Criar painel de controle
 local panel = Instance.new("Frame")
