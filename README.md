@@ -104,7 +104,7 @@ title.Size = UDim2.new(1, 0, 0, 45)
 title.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
 title.BackgroundTransparency = 0.3
 title.BorderSizePixel = 0
-title.Text = "Menu Principal"
+title.Text = "Soute Hub"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextSize = 18
 title.Font = Enum.Font.GothamBold
@@ -123,9 +123,9 @@ local function createCategoryButton(name, text, position, icon)
     button.Position = position
     button.BackgroundColor3 = Color3.fromRGB(60, 120, 220)
     button.BorderSizePixel = 0
-    button.Text = ""
+    button.Text = text
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.TextSize = 14
+    button.TextSize = 15
     button.Font = Enum.Font.GothamBold
     button.ZIndex = 102
     button.Parent = panel
@@ -134,33 +134,12 @@ local function createCategoryButton(name, text, position, icon)
     btnCorner.CornerRadius = UDim.new(0, 10)
     btnCorner.Parent = button
     
-    local iconLabel = Instance.new("TextLabel")
-    iconLabel.Size = UDim2.new(1, 0, 0, 30)
-    iconLabel.Position = UDim2.new(0, 0, 0, 5)
-    iconLabel.BackgroundTransparency = 1
-    iconLabel.Text = icon
-    iconLabel.TextSize = 24
-    iconLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    iconLabel.ZIndex = 103
-    iconLabel.Parent = button
-    
-    local textLabel = Instance.new("TextLabel")
-    textLabel.Size = UDim2.new(1, 0, 0, 20)
-    textLabel.Position = UDim2.new(0, 0, 1, -25)
-    textLabel.BackgroundTransparency = 1
-    textLabel.Text = text
-    textLabel.TextSize = 13
-    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    textLabel.Font = Enum.Font.GothamBold
-    textLabel.ZIndex = 103
-    textLabel.Parent = button
-    
     return button
 end
 
 -- Criar categorias
-local movementBtn = createCategoryButton("MovementButton", "Movement", UDim2.new(0.05, 0, 0, 60), "🏃")
-local settingsBtn = createCategoryButton("SettingsButton", "Settings", UDim2.new(0.5, 0, 0, 60), "⚙️")
+local movementBtn = createCategoryButton("MovementButton", "Movement", UDim2.new(0.05, 0, 0, 60), "")
+local settingsBtn = createCategoryButton("SettingsButton", "Settings", UDim2.new(0.5, 0, 0, 60), "")
 
 -- Criar painéis de categorias
 local function createCategoryPanel(name)
@@ -208,8 +187,8 @@ local function createButton(name, text, position, parent)
 end
 
 -- Criar botões de Movement
-local saveBtn = createButton("SaveButton", "💾 Salvar Local", UDim2.new(0.05, 0, 0, 10), movementPanel)
-local returnBtn = createButton("ReturnButton", "⚡ Desync Tp v2", UDim2.new(0.05, 0, 0, 60), movementPanel)
+local saveBtn = createButton("SaveButton", "Salvar Local", UDim2.new(0.05, 0, 0, 10), movementPanel)
+local returnBtn = createButton("ReturnButton", "Desync Tp v2", UDim2.new(0.05, 0, 0, 60), movementPanel)
 
 -- Criar controle de velocidade
 local speedFrame = Instance.new("Frame")
@@ -230,7 +209,7 @@ speedLabel.Name = "SpeedLabel"
 speedLabel.Size = UDim2.new(0.5, 0, 1, 0)
 speedLabel.Position = UDim2.new(0, 10, 0, 0)
 speedLabel.BackgroundTransparency = 1
-speedLabel.Text = "🚀 Velocidade: 16"
+speedLabel.Text = "Velocidade: 16"
 speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 speedLabel.TextSize = 13
 speedLabel.Font = Enum.Font.GothamBold
@@ -273,8 +252,8 @@ increaseCorner.CornerRadius = UDim.new(0, 6)
 increaseCorner.Parent = increaseBtn
 
 -- Criar botões de Settings
-local espBtn = createButton("ESPButton", "👁️ Wall Esp", UDim2.new(0.05, 0, 0, 10), settingsPanel)
-local serverHopBtn = createButton("ServerHopButton", "🌐 Server Hop", UDim2.new(0.05, 0, 0, 60), settingsPanel)
+local espBtn = createButton("ESPButton", "Wall Esp", UDim2.new(0.05, 0, 0, 10), settingsPanel)
+local serverHopBtn = createButton("ServerHopButton", "Server Hop", UDim2.new(0.05, 0, 0, 60), settingsPanel)
 
 -- Botão para voltar
 local backBtn = Instance.new("TextButton")
@@ -283,7 +262,7 @@ backBtn.Size = UDim2.new(0.3, 0, 0, 35)
 backBtn.Position = UDim2.new(0.35, 0, 1, -45)
 backBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
 backBtn.BorderSizePixel = 0
-backBtn.Text = "← Voltar"
+backBtn.Text = "Voltar"
 backBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 backBtn.TextSize = 13
 backBtn.Font = Enum.Font.GothamBold
@@ -340,6 +319,43 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
+-- Sistema de arrastar o painel
+local panelDragging = false
+local panelDragInput
+local panelDragStart
+local panelStartPos
+
+local function updatePanelInput(input)
+    local delta = input.Position - panelDragStart
+    panel.Position = UDim2.new(panelStartPos.X.Scale, panelStartPos.X.Offset + delta.X, panelStartPos.Y.Scale, panelStartPos.Y.Offset + delta.Y)
+end
+
+title.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        panelDragging = true
+        panelDragStart = input.Position
+        panelStartPos = panel.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                panelDragging = false
+            end
+        end)
+    end
+end)
+
+title.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        panelDragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == panelDragInput and panelDragging then
+        updatePanelInput(input)
+    end
+end)
+
 -- Função para mostrar categoria
 local function showCategory(categoryName)
     movementPanel.Visible = false
@@ -352,11 +368,11 @@ local function showCategory(categoryName)
     if categoryName == "movement" then
         movementPanel.Visible = true
         movementBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
-        title.Text = "Movement"
+        title.Text = "Soute Hub - Movement"
     elseif categoryName == "settings" then
         settingsPanel.Visible = true
         settingsBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
-        title.Text = "Settings"
+        title.Text = "Soute Hub - Settings"
     end
     
     currentCategory = categoryName
@@ -368,7 +384,7 @@ local function showMainMenu()
     settingsPanel.Visible = false
     backBtn.Visible = false
     currentCategory = nil
-    title.Text = "Menu Principal"
+    title.Text = "Soute Hub"
     
     movementBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 220)
     settingsBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 220)
