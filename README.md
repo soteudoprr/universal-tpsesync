@@ -1,8 +1,5 @@
--- Script para Roblox Studio - Bolinha Flutuante com ESP
--- Coloque este script em StarterGui ou StarterPlayerScripts
-
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
+local TeleportService = game:GetService("TeleportService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 
@@ -45,8 +42,8 @@ gradient.Parent = orb
 -- Criar painel de controle
 local panel = Instance.new("Frame")
 panel.Name = "ControlPanel"
-panel.Size = UDim2.new(0, 250, 0, 220)
-panel.Position = UDim2.new(0.5, -125, 0.5, -110)
+panel.Size = UDim2.new(0, 250, 0, 270)
+panel.Position = UDim2.new(0.5, -125, 0.5, -135)
 panel.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 panel.BackgroundTransparency = 0.3
 panel.BorderSizePixel = 0
@@ -102,38 +99,60 @@ end
 local saveBtn = createButton("SaveButton", "Salvar Local", UDim2.new(0.075, 0, 0, 55))
 local returnBtn = createButton("ReturnButton", "Desync Tp v2", UDim2.new(0.075, 0, 0, 105))
 local espBtn = createButton("ESPButton", "Wall Esp", UDim2.new(0.075, 0, 0, 155))
+local serverHopBtn = createButton("ServerHopButton", "Server Hop", UDim2.new(0.075, 0, 0, 205))
 
 -- Variáveis de controle
 local panelOpen = false
 local savedPosition = nil
 local espEnabled = false
-local espConnections = {}
 local espHighlights = {}
-local espTracers = {}
 
--- Animação da bolinha flutuante
-local floatTween
-local function animateOrb()
-    local goal = {}
-    goal.Position = UDim2.new(orb.Position.X.Scale, 0, orb.Position.Y.Scale + 0.02, 0)
-    local tweenInfo = TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
-    floatTween = TweenService:Create(orb, tweenInfo, goal)
-    floatTween:Play()
+-- Sistema de arrastar a bolinha (mobile e PC)
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+local function updateInput(input)
+    local delta = input.Position - dragStart
+    orb.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 end
 
-animateOrb()
+orb.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = orb.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+orb.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        updateInput(input)
+    end
+end)
 
 -- Função para abrir/fechar painel
 local function togglePanel()
     panelOpen = not panelOpen
     
-    print("Painel toggled:", panelOpen) -- Debug
-    
     if panelOpen then
         panel.Visible = true
         panel.Position = UDim2.new(0.5, -125, 1, 0)
         local tween = TweenService:Create(panel, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
-            Position = UDim2.new(0.5, -125, 0.5, -110)
+            Position = UDim2.new(0.5, -125, 0.5, -135)
         })
         tween:Play()
     else
@@ -148,7 +167,9 @@ end
 
 -- Clique na bolinha para abrir/fechar painel
 orb.MouseButton1Click:Connect(function()
-    togglePanel()
+    if not dragging then
+        togglePanel()
+    end
 end)
 
 -- Função salvar posição
@@ -190,10 +211,6 @@ local function createESP(targetPlayer)
             espHighlights[targetPlayer]:Destroy()
         end
         
-        if espTracers[targetPlayer] then
-            espTracers[targetPlayer]:Destroy()
-        end
-        
         -- Criar Highlight
         local highlight = Instance.new("Highlight")
         highlight.Name = "ESP_Highlight"
@@ -205,59 +222,6 @@ local function createESP(targetPlayer)
         highlight.Parent = character
         
         espHighlights[targetPlayer] = highlight
-        
-        -- Criar linha traçadora (tracer)
-        local tracerGui = Instance.new("ScreenGui")
-        tracerGui.Name = "ESP_Tracer"
-        tracerGui.ResetOnSpawn = false
-        tracerGui.IgnoreGuiInset = true
-        tracerGui.Parent = playerGui
-        
-        local tracerFrame = Instance.new("Frame")
-        tracerFrame.Name = "TracerLine"
-        tracerFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        tracerFrame.BorderSizePixel = 0
-        tracerFrame.AnchorPoint = Vector2.new(0.5, 0)
-        tracerFrame.Parent = tracerGui
-        
-        espTracers[targetPlayer] = tracerGui
-        
-        -- Atualizar posição da linha em tempo real
-        local connection = RunService.RenderStepped:Connect(function()
-            if not character or not character:FindFirstChild("HumanoidRootPart") then return end
-            
-            local camera = workspace.CurrentCamera
-            local characterPos = character.HumanoidRootPart.Position
-            
-            -- Converter posição 3D para 2D
-            local screenPos, onScreen = camera:WorldToViewportPoint(characterPos)
-            
-            if onScreen then
-                -- Ponto inicial (topo central da tela)
-                local startX = camera.ViewportSize.X / 2
-                local startY = 0
-                
-                -- Ponto final (posição do jogador na tela) - ajustado para ir até os pés
-                local feetPos = character.HumanoidRootPart.Position - Vector3.new(0, 3, 0)
-                local feetScreen = camera:WorldToViewportPoint(feetPos)
-                local endX = feetScreen.X
-                local endY = feetScreen.Y
-                
-                -- Calcular distância e ângulo
-                local distance = math.sqrt((endX - startX)^2 + (endY - startY)^2)
-                local angle = math.deg(math.atan2(endY - startY, endX - startX))
-                
-                -- Atualizar a linha
-                tracerFrame.Size = UDim2.new(0, distance, 0, 2)
-                tracerFrame.Position = UDim2.new(0, startX, 0, startY)
-                tracerFrame.Rotation = angle
-                tracerFrame.Visible = true
-            else
-                tracerFrame.Visible = false
-            end
-        end)
-        
-        espConnections[targetPlayer] = connection
     end
     
     setupESP()
@@ -276,16 +240,6 @@ local function removeESP(targetPlayer)
     if espHighlights[targetPlayer] then
         espHighlights[targetPlayer]:Destroy()
         espHighlights[targetPlayer] = nil
-    end
-    
-    if espTracers[targetPlayer] then
-        espTracers[targetPlayer]:Destroy()
-        espTracers[targetPlayer] = nil
-    end
-    
-    if espConnections[targetPlayer] then
-        espConnections[targetPlayer]:Disconnect()
-        espConnections[targetPlayer] = nil
     end
 end
 
@@ -321,8 +275,61 @@ espBtn.MouseButton1Click:Connect(function()
     end
 end)
 
+-- Função Server Hop
+serverHopBtn.MouseButton1Click:Connect(function()
+    serverHopBtn.Text = "⏳ Procurando..."
+    serverHopBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 50)
+    
+    local success, result = pcall(function()
+        local currentGameId = game.PlaceId
+        local servers = {}
+        
+        -- Buscar servidores disponíveis
+        local cursor = ""
+        repeat
+            local success, page = pcall(function()
+                return game:GetService("HttpService"):JSONDecode(
+                    game:HttpGet(string.format(
+                        "https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100&cursor=%s",
+                        currentGameId, cursor
+                    ))
+                )
+            end)
+            
+            if success and page then
+                for _, server in pairs(page.data) do
+                    if server.playing < server.maxPlayers and server.id ~= game.JobId then
+                        table.insert(servers, server.id)
+                    end
+                end
+                cursor = page.nextPageCursor or ""
+            else
+                break
+            end
+        until cursor == ""
+        
+        -- Teleportar para servidor aleatório
+        if #servers > 0 then
+            local randomServer = servers[math.random(1, #servers)]
+            TeleportService:TeleportToPlaceInstance(currentGameId, randomServer, player)
+        else
+            serverHopBtn.Text = "❌ Sem servidores"
+            wait(2)
+            serverHopBtn.Text = "Server Hop"
+            serverHopBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 220)
+        end
+    end)
+    
+    if not success then
+        serverHopBtn.Text = "❌ Erro"
+        wait(2)
+        serverHopBtn.Text = "Server Hop"
+        serverHopBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 220)
+    end
+end)
+
 -- Efeito hover nos botões
-local buttons = {saveBtn, returnBtn, espBtn}
+local buttons = {saveBtn, returnBtn, espBtn, serverHopBtn}
 for _, button in pairs(buttons) do
     button.MouseEnter:Connect(function()
         TweenService:Create(button, TweenInfo.new(0.2), {
