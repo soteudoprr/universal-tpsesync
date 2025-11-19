@@ -81,6 +81,31 @@ emojiLabel.Font = Enum.Font.GothamBold
 emojiLabel.ZIndex = 10
 emojiLabel.Parent = orb
 
+-- Criar botão de teleporte flutuante
+local tpButton = Instance.new("TextButton")
+tpButton.Name = "TeleportButton"
+tpButton.Size = UDim2.new(0, 100, 0, 45)
+tpButton.Position = UDim2.new(1, -120, 0, 80)
+tpButton.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+tpButton.BorderSizePixel = 0
+tpButton.Text = "TP"
+tpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+tpButton.TextSize = 16
+tpButton.Font = Enum.Font.GothamBold
+tpButton.Visible = false
+tpButton.ZIndex = 200
+tpButton.Parent = screenGui
+
+local tpCorner = Instance.new("UICorner")
+tpCorner.CornerRadius = UDim.new(0, 8)
+tpCorner.Parent = tpButton
+
+local tpStroke = Instance.new("UIStroke")
+tpStroke.Color = Color3.fromRGB(255, 50, 50)
+tpStroke.Thickness = 2
+tpStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+tpStroke.Parent = tpButton
+
 -- Criar painel de controle principal
 local panel = Instance.new("Frame")
 panel.Name = "ControlPanel"
@@ -286,6 +311,7 @@ local savedPosition = nil
 local espEnabled = false
 local espHighlights = {}
 local currentSpeed = 16
+local tpButtonVisible = false
 
 -- Sistema de arrastar a bolinha
 local dragging = false
@@ -445,16 +471,35 @@ end)
 
 -- Função voltar à posição
 returnBtn.MouseButton1Click:Connect(function()
-    local character = player.Character
-    if character and character:FindFirstChild("HumanoidRootPart") and savedPosition then
-        character.HumanoidRootPart.CFrame = savedPosition
-        returnBtn.Text = "Teleportado!"
-        wait(1)
-        returnBtn.Text = "Desync Tp v2"
-    else
+    if not savedPosition then
         returnBtn.Text = "Sem posição"
         wait(1)
         returnBtn.Text = "Desync Tp v2"
+        return
+    end
+    
+    -- Toggle do botão de teleporte
+    tpButtonVisible = not tpButtonVisible
+    
+    if tpButtonVisible then
+        tpButton.Visible = true
+        returnBtn.Text = "Desativar TP"
+        returnBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
+    else
+        tpButton.Visible = false
+        returnBtn.Text = "Desync Tp v2"
+        returnBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+    end
+end)
+
+-- Função do botão de teleporte flutuante
+tpButton.MouseButton1Click:Connect(function()
+    local character = player.Character
+    if character and character:FindFirstChild("HumanoidRootPart") and savedPosition then
+        character.HumanoidRootPart.CFrame = savedPosition
+        tpButton.Text = "Teleportado!"
+        wait(0.5)
+        tpButton.Text = "TP"
     end
 end)
 
@@ -631,12 +676,16 @@ for _, button in pairs(categoryButtons) do
 end
 
 -- Efeito hover nos botões de ação
-local actionButtons = {saveBtn, returnBtn, espBtn, serverHopBtn, decreaseBtn, increaseBtn}
+local actionButtons = {saveBtn, returnBtn, espBtn, serverHopBtn, decreaseBtn, increaseBtn, tpButton}
 for _, button in pairs(actionButtons) do
     button.MouseEnter:Connect(function()
         if button == decreaseBtn or button == increaseBtn then
             TweenService:Create(button, TweenInfo.new(0.2), {
                 Size = UDim2.new(0, 35, 0, 35)
+            }):Play()
+        elseif button == tpButton then
+            TweenService:Create(button, TweenInfo.new(0.2), {
+                Size = UDim2.new(0, 105, 0, 48)
             }):Play()
         else
             TweenService:Create(button, TweenInfo.new(0.2), {
@@ -649,6 +698,10 @@ for _, button in pairs(actionButtons) do
         if button == decreaseBtn or button == increaseBtn then
             TweenService:Create(button, TweenInfo.new(0.2), {
                 Size = UDim2.new(0, 32, 0, 32)
+            }):Play()
+        elseif button == tpButton then
+            TweenService:Create(button, TweenInfo.new(0.2), {
+                Size = UDim2.new(0, 100, 0, 45)
             }):Play()
         else
             TweenService:Create(button, TweenInfo.new(0.2), {
