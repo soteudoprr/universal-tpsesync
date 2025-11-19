@@ -109,10 +109,10 @@ tpStroke.Parent = tpButton
 -- Criar painel de controle principal
 local panel = Instance.new("Frame")
 panel.Name = "ControlPanel"
-panel.Size = UDim2.new(0, 260, 0, 315)
-panel.Position = UDim2.new(0.5, -130, 0.5, -157.5)
+panel.Size = UDim2.new(0, 240, 0, 290)
+panel.Position = UDim2.new(0.5, -120, 0.5, -145)
 panel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-panel.BackgroundTransparency = 0.2
+panel.BackgroundTransparency = 0
 panel.BorderSizePixel = 0
 panel.Visible = false
 panel.ZIndex = 100
@@ -125,13 +125,13 @@ panelCorner.Parent = panel
 -- Título do painel
 local title = Instance.new("TextLabel")
 title.Name = "Title"
-title.Size = UDim2.new(1, 0, 0, 38)
+title.Size = UDim2.new(1, 0, 0, 35)
 title.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
-title.BackgroundTransparency = 0.3
+title.BackgroundTransparency = 0
 title.BorderSizePixel = 0
 title.Text = "Soute Hub"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.TextSize = 16
+title.TextSize = 15
 title.Font = Enum.Font.GothamBold
 title.ZIndex = 101
 title.Parent = panel
@@ -144,71 +144,16 @@ titleCorner.Parent = title
 local function createCategoryButton(name, text, position, icon)
     local button = Instance.new("TextButton")
     button.Name = name
-    button.Size = UDim2.new(0.44, 0, 0, 35)
+    button.Size = UDim2.new(0.45, 0, 0, 30)
     button.Position = position
     button.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
     button.BorderSizePixel = 0
     button.Text = text
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.TextSize = 13
+    button.TextSize = 12
     button.Font = Enum.Font.GothamBold
     button.ZIndex = 102
     button.Parent = panel
-    
-    local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(0, 8)
-    btnCorner.Parent = button
-    
-    local btnStroke = Instance.new("UIStroke")
-    btnStroke.Color = Color3.fromRGB(0, 0, 0)
-    btnStroke.Thickness = 2
-    btnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    btnStroke.Parent = button
-    
-    return button
-end
-
--- Criar categorias
-local movementBtn = createCategoryButton("MovementButton", "Movement", UDim2.new(0.06, 0, 0, 45), "")
-local settingsBtn = createCategoryButton("SettingsButton", "Settings", UDim2.new(0.5, 0, 0, 45), "")
-
--- Criar painéis de categorias
-local function createCategoryPanel(name)
-    local catPanel = Instance.new("Frame")
-    catPanel.Name = name
-    catPanel.Size = UDim2.new(0.92, 0, 0, 225)
-    catPanel.Position = UDim2.new(0.04, 0, 0, 87)
-    catPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    catPanel.BackgroundTransparency = 0.3
-    catPanel.BorderSizePixel = 0
-    catPanel.Visible = false
-    catPanel.ZIndex = 101
-    catPanel.Parent = panel
-    
-    local catCorner = Instance.new("UICorner")
-    catCorner.CornerRadius = UDim.new(0, 8)
-    catCorner.Parent = catPanel
-    
-    return catPanel
-end
-
-local movementPanel = createCategoryPanel("MovementPanel")
-local settingsPanel = createCategoryPanel("SettingsPanel")
-
--- Função para criar botões nas categorias
-local function createButton(name, text, position, parent)
-    local button = Instance.new("TextButton")
-    button.Name = name
-    button.Size = UDim2.new(0.88, 0, 0, 35)
-    button.Position = position
-    button.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
-    button.BorderSizePixel = 0
-    button.Text = text
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.TextSize = 13
-    button.Font = Enum.Font.GothamBold
-    button.ZIndex = 102
-    button.Parent = parent
     
     local btnCorner = Instance.new("UICorner")
     btnCorner.CornerRadius = UDim.new(0, 7)
@@ -223,38 +168,93 @@ local function createButton(name, text, position, parent)
     return button
 end
 
+-- Criar categorias
+local movementBtn = createCategoryButton("MovementButton", "Movement", UDim2.new(0.05, 0, 0, 42), "")
+local settingsBtn = createCategoryButton("SettingsButton", "Settings", UDim2.new(0.5, 0, 0, 42), "")
+
+-- Criar painéis de categorias
+local function createCategoryPanel(name)
+    local catPanel = Instance.new("Frame")
+    catPanel.Name = name
+    catPanel.Size = UDim2.new(0.9, 0, 0, 210)
+    catPanel.Position = UDim2.new(0.05, 0, 0, 77)
+    catPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    catPanel.BackgroundTransparency = 0
+    catPanel.BorderSizePixel = 0
+    catPanel.Visible = false
+    catPanel.ZIndex = 101
+    catPanel.Parent = panel
+    
+    local catCorner = Instance.new("UICorner")
+    catCorner.CornerRadius = UDim.new(0, 7)
+    catCorner.Parent = catPanel
+    
+    return catPanel
+end
+
+local movementPanel = createCategoryPanel("MovementPanel")
+local settingsPanel = createCategoryPanel("SettingsPanel")
+
+-- Função para criar botões nas categorias
+local function createButton(name, text, position, parent)
+    local button = Instance.new("TextButton")
+    button.Name = name
+    button.Size = UDim2.new(0.88, 0, 0, 30)
+    button.Position = position
+    button.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+    button.BorderSizePixel = 0
+    button.Text = text
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.TextSize = 12
+    button.Font = Enum.Font.GothamBold
+    button.ZIndex = 102
+    button.Parent = parent
+    
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 6)
+    btnCorner.Parent = button
+    
+    local btnStroke = Instance.new("UIStroke")
+    btnStroke.Color = Color3.fromRGB(0, 0, 0)
+    btnStroke.Thickness = 2
+    btnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    btnStroke.Parent = button
+    
+    return button
+end
+
 -- Criar botões de Movement
-local saveBtn = createButton("SaveButton", "Salvar Local", UDim2.new(0.06, 0, 0, 8), movementPanel)
-local returnBtn = createButton("ReturnButton", "Desync Tp v2", UDim2.new(0.06, 0, 0, 50), movementPanel)
+local saveBtn = createButton("SaveButton", "Salvar Local", UDim2.new(0.06, 0, 0, 7), movementPanel)
+local returnBtn = createButton("ReturnButton", "Desync Tp v2", UDim2.new(0.06, 0, 0, 43), movementPanel)
 
 -- Botão Infinite Jump
-local infJumpBtn = createButton("InfJumpButton", "Infinite Jump", UDim2.new(0.06, 0, 0, 137), movementPanel)
+local infJumpBtn = createButton("InfJumpButton", "Infinite Jump", UDim2.new(0.06, 0, 0, 126), movementPanel)
 
 -- Botão Fly
-local flyBtn = createButton("FlyButton", "Fly", UDim2.new(0.06, 0, 0, 179), movementPanel)
+local flyBtn = createButton("FlyButton", "Fly", UDim2.new(0.06, 0, 0, 162), movementPanel)
 
 -- Criar controle de velocidade
 local speedFrame = Instance.new("Frame")
 speedFrame.Name = "SpeedFrame"
-speedFrame.Size = UDim2.new(0.88, 0, 0, 42)
-speedFrame.Position = UDim2.new(0.06, 0, 0, 92)
+speedFrame.Size = UDim2.new(0.88, 0, 0, 36)
+speedFrame.Position = UDim2.new(0.06, 0, 0, 82)
 speedFrame.BackgroundColor3 = Color3.fromRGB(55, 55, 65)
 speedFrame.BorderSizePixel = 0
 speedFrame.ZIndex = 102
 speedFrame.Parent = movementPanel
 
 local speedCorner = Instance.new("UICorner")
-speedCorner.CornerRadius = UDim.new(0, 7)
+speedCorner.CornerRadius = UDim.new(0, 6)
 speedCorner.Parent = speedFrame
 
 local speedLabel = Instance.new("TextLabel")
 speedLabel.Name = "SpeedLabel"
 speedLabel.Size = UDim2.new(0.5, 0, 1, 0)
-speedLabel.Position = UDim2.new(0, 8, 0, 0)
+speedLabel.Position = UDim2.new(0, 6, 0, 0)
 speedLabel.BackgroundTransparency = 1
 speedLabel.Text = "Velocidade: 16"
 speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-speedLabel.TextSize = 12
+speedLabel.TextSize = 11
 speedLabel.Font = Enum.Font.GothamBold
 speedLabel.TextXAlignment = Enum.TextXAlignment.Left
 speedLabel.ZIndex = 103
@@ -262,13 +262,13 @@ speedLabel.Parent = speedFrame
 
 local decreaseBtn = Instance.new("TextButton")
 decreaseBtn.Name = "DecreaseButton"
-decreaseBtn.Size = UDim2.new(0, 32, 0, 32)
-decreaseBtn.Position = UDim2.new(1, -75, 0.5, -16)
+decreaseBtn.Size = UDim2.new(0, 28, 0, 28)
+decreaseBtn.Position = UDim2.new(1, -64, 0.5, -14)
 decreaseBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
 decreaseBtn.BorderSizePixel = 0
 decreaseBtn.Text = "-"
 decreaseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-decreaseBtn.TextSize = 18
+decreaseBtn.TextSize = 16
 decreaseBtn.Font = Enum.Font.GothamBold
 decreaseBtn.ZIndex = 103
 decreaseBtn.Parent = speedFrame
@@ -285,13 +285,13 @@ decreaseStroke.Parent = decreaseBtn
 
 local increaseBtn = Instance.new("TextButton")
 increaseBtn.Name = "IncreaseButton"
-increaseBtn.Size = UDim2.new(0, 32, 0, 32)
-increaseBtn.Position = UDim2.new(1, -38, 0.5, -16)
+increaseBtn.Size = UDim2.new(0, 28, 0, 28)
+increaseBtn.Position = UDim2.new(1, -32, 0.5, -14)
 increaseBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
 increaseBtn.BorderSizePixel = 0
 increaseBtn.Text = "+"
 increaseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-increaseBtn.TextSize = 18
+increaseBtn.TextSize = 16
 increaseBtn.Font = Enum.Font.GothamBold
 increaseBtn.ZIndex = 103
 increaseBtn.Parent = speedFrame
@@ -307,9 +307,9 @@ increaseStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 increaseStroke.Parent = increaseBtn
 
 -- Criar botões de Settings
-local espBtn = createButton("ESPButton", "Wall Esp", UDim2.new(0.06, 0, 0, 8), settingsPanel)
-local serverHopBtn = createButton("ServerHopButton", "Server Hop", UDim2.new(0.06, 0, 0, 50), settingsPanel)
-local rejoinBtn = createButton("RejoinButton", "Server Rejoin", UDim2.new(0.06, 0, 0, 92), settingsPanel)
+local espBtn = createButton("ESPButton", "Wall Esp", UDim2.new(0.06, 0, 0, 7), settingsPanel)
+local serverHopBtn = createButton("ServerHopButton", "Server Hop", UDim2.new(0.06, 0, 0, 43), settingsPanel)
+local rejoinBtn = createButton("RejoinButton", "Server Rejoin", UDim2.new(0.06, 0, 0, 79), settingsPanel)
 
 -- Variáveis de controle
 local panelOpen = false
@@ -434,15 +434,15 @@ local function togglePanel()
     
     if panelOpen then
         panel.Visible = true
-        panel.Position = UDim2.new(0.5, -130, 1, 0)
+        panel.Position = UDim2.new(0.5, -120, 1, 0)
         showCategory("movement") -- Abre direto em Movement
         local tween = TweenService:Create(panel, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
-            Position = UDim2.new(0.5, -130, 0.5, -157.5)
+            Position = UDim2.new(0.5, -120, 0.5, -145)
         })
         tween:Play()
     else
         local tween = TweenService:Create(panel, TweenInfo.new(0.2, Enum.EasingStyle.Back), {
-            Position = UDim2.new(0.5, -130, 1, 0)
+            Position = UDim2.new(0.5, -120, 1, 0)
         })
         tween:Play()
         wait(0.2)
@@ -747,13 +747,13 @@ local categoryButtons = {movementBtn, settingsBtn}
 for _, button in pairs(categoryButtons) do
     button.MouseEnter:Connect(function()
         TweenService:Create(button, TweenInfo.new(0.2), {
-            Size = UDim2.new(0.46, 0, 0, 37)
+            Size = UDim2.new(0.47, 0, 0, 32)
         }):Play()
     end)
     
     button.MouseLeave:Connect(function()
         TweenService:Create(button, TweenInfo.new(0.2), {
-            Size = UDim2.new(0.44, 0, 0, 35)
+            Size = UDim2.new(0.45, 0, 0, 30)
         }):Play()
     end)
 end
@@ -764,7 +764,7 @@ for _, button in pairs(actionButtons) do
     button.MouseEnter:Connect(function()
         if button == decreaseBtn or button == increaseBtn then
             TweenService:Create(button, TweenInfo.new(0.2), {
-                Size = UDim2.new(0, 35, 0, 35)
+                Size = UDim2.new(0, 30, 0, 30)
             }):Play()
         elseif button == tpButton then
             TweenService:Create(button, TweenInfo.new(0.2), {
@@ -780,7 +780,7 @@ for _, button in pairs(actionButtons) do
     button.MouseLeave:Connect(function()
         if button == decreaseBtn or button == increaseBtn then
             TweenService:Create(button, TweenInfo.new(0.2), {
-                Size = UDim2.new(0, 32, 0, 32)
+                Size = UDim2.new(0, 28, 0, 28)
             }):Play()
         elseif button == tpButton then
             TweenService:Create(button, TweenInfo.new(0.2), {
@@ -788,7 +788,7 @@ for _, button in pairs(actionButtons) do
             }):Play()
         else
             TweenService:Create(button, TweenInfo.new(0.2), {
-                Size = UDim2.new(0.88, 0, 0, 35)
+                Size = UDim2.new(0.88, 0, 0, 30)
             }):Play()
         end
     end)
