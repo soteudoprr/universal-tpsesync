@@ -106,11 +106,36 @@ tpStroke.Thickness = 2
 tpStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 tpStroke.Parent = tpButton
 
+-- Criar botão de fly flutuante
+local flyButton = Instance.new("TextButton")
+flyButton.Name = "FlyButton"
+flyButton.Size = UDim2.new(0, 100, 0, 45)
+flyButton.Position = UDim2.new(1, -120, 0, 135)
+flyButton.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+flyButton.BorderSizePixel = 0
+flyButton.Text = "FLY"
+flyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+flyButton.TextSize = 16
+flyButton.Font = Enum.Font.GothamBold
+flyButton.Visible = false
+flyButton.ZIndex = 200
+flyButton.Parent = screenGui
+
+local flyCorner = Instance.new("UICorner")
+flyCorner.CornerRadius = UDim.new(0, 8)
+flyCorner.Parent = flyButton
+
+local flyStroke = Instance.new("UIStroke")
+flyStroke.Color = Color3.fromRGB(255, 50, 50)
+flyStroke.Thickness = 2
+flyStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+flyStroke.Parent = flyButton
+
 -- Criar painel de controle principal
 local panel = Instance.new("Frame")
 panel.Name = "ControlPanel"
-panel.Size = UDim2.new(0, 260, 0, 315)
-panel.Position = UDim2.new(0.5, -130, 0.5, -157.5)
+panel.Size = UDim2.new(0, 260, 0, 357)
+panel.Position = UDim2.new(0.5, -130, 0.5, -178.5)
 panel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 panel.BackgroundTransparency = 0.2
 panel.BorderSizePixel = 0
@@ -176,7 +201,7 @@ local settingsBtn = createCategoryButton("SettingsButton", "Settings", UDim2.new
 local function createCategoryPanel(name)
     local catPanel = Instance.new("Frame")
     catPanel.Name = name
-    catPanel.Size = UDim2.new(0.92, 0, 0, 225)
+    catPanel.Size = UDim2.new(0.92, 0, 0, 267)
     catPanel.Position = UDim2.new(0.04, 0, 0, 87)
     catPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     catPanel.BackgroundTransparency = 0.3
@@ -229,6 +254,9 @@ local returnBtn = createButton("ReturnButton", "Desync Tp v2", UDim2.new(0.06, 0
 
 -- Botão Infinite Jump
 local infJumpBtn = createButton("InfJumpButton", "Infinite Jump", UDim2.new(0.06, 0, 0, 137), movementPanel)
+
+-- Botão Fly
+local flyBtn = createButton("FlyButton", "Fly", UDim2.new(0.06, 0, 0, 179), movementPanel)
 
 -- Criar controle de velocidade
 local speedFrame = Instance.new("Frame")
@@ -318,6 +346,10 @@ local currentSpeed = 16
 local tpButtonVisible = false
 local infJumpEnabled = false
 local infJumpConnection = nil
+local flyEnabled = false
+local flyConnection = nil
+local flyBodyVelocity = nil
+local flyBodyGyro = nil
 
 -- Sistema de arrastar a bolinha
 local dragging = false
@@ -434,7 +466,7 @@ local function togglePanel()
         panel.Position = UDim2.new(0.5, -130, 1, 0)
         showCategory("movement") -- Abre direto em Movement
         local tween = TweenService:Create(panel, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
-            Position = UDim2.new(0.5, -130, 0.5, -157.5)
+            Position = UDim2.new(0.5, -130, 0.5, -178.5)
         })
         tween:Play()
     else
@@ -545,6 +577,14 @@ player.CharacterAdded:Connect(function(character)
         if infJumpEnabled then
             setupInfiniteJump(character)
         end
+        
+        -- Resetar fly se estava ativo
+        if flyEnabled then
+            flyEnabled = false
+            flyButton.Visible = false
+            flyBtn.Text = "Fly"
+            flyBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+        end
     end
 end)
 
@@ -584,6 +624,127 @@ infJumpBtn.MouseButton1Click:Connect(function()
             infJumpConnection:Disconnect()
             infJumpConnection = nil
         end
+    end
+end)
+
+-- Função para controlar o fly
+local function setupFly(character)
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return end
+    
+    -- Criar BodyVelocity
+    flyBodyVelocity = Instance.new("BodyVelocity")
+    flyBodyVelocity.Velocity = Vector3.new(0, 0, 0)
+    flyBodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+    flyBodyVelocity.Parent = humanoidRootPart
+    
+    -- Criar BodyGyro
+    flyBodyGyro = Instance.new("BodyGyro")
+    flyBodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+    flyBodyGyro.P = 9e4
+    flyBodyGyro.Parent = humanoidRootPart
+    
+    -- Controle de movimento
+    if flyConnection then
+        flyConnection:Disconnect()
+    end
+    
+    flyConnection = game:GetService("RunService").RenderStepped:Connect(function()
+        if not flyEnabled or not character or not humanoidRootPart then
+            if flyConnection then
+                flyConnection:Disconnect()
+            end
+            return
+        end
+        
+        local camera = workspace.CurrentCamera
+        flyBodyGyro.CFrame = camera.CFrame
+        
+        local moveDirection = Vector3.new(0, 0, 0)
+        
+        -- Detectar teclas (PC)
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+            moveDirection = moveDirection + camera.CFrame.LookVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+            moveDirection = moveDirection - camera.CFrame.LookVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+            moveDirection = moveDirection - camera.CFrame.RightVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+            moveDirection = moveDirection + camera.CFrame.RightVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+            moveDirection = moveDirection + Vector3.new(0, 1, 0)
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+            moveDirection = moveDirection - Vector3.new(0, 1, 0)
+        end
+        
+        flyBodyVelocity.Velocity = moveDirection.Unit * 45
+    end)
+end
+
+-- Função para desativar fly
+local function disableFly()
+    if flyConnection then
+        flyConnection:Disconnect()
+        flyConnection = nil
+    end
+    
+    if flyBodyVelocity then
+        flyBodyVelocity:Destroy()
+        flyBodyVelocity = nil
+    end
+    
+    if flyBodyGyro then
+        flyBodyGyro:Destroy()
+        flyBodyGyro = nil
+    end
+end
+
+-- Toggle Fly no painel
+flyBtn.MouseButton1Click:Connect(function()
+    flyEnabled = not flyEnabled
+    
+    if flyEnabled then
+        flyButton.Visible = true
+        flyBtn.Text = "Desativar Fly"
+        flyBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
+        
+        local character = player.Character
+        if character then
+            setupFly(character)
+        end
+    else
+        flyButton.Visible = false
+        flyBtn.Text = "Fly"
+        flyBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+        disableFly()
+    end
+end)
+
+-- Botão de fly flutuante
+flyButton.MouseButton1Click:Connect(function()
+    flyEnabled = not flyEnabled
+    
+    if flyEnabled then
+        flyButton.Text = "FLY [ON]"
+        flyButton.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
+        flyBtn.Text = "Desativar Fly"
+        flyBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
+        
+        local character = player.Character
+        if character then
+            setupFly(character)
+        end
+    else
+        flyButton.Text = "FLY"
+        flyButton.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+        flyBtn.Text = "Fly"
+        flyBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+        disableFly()
     end
 end)
 
@@ -735,14 +896,14 @@ for _, button in pairs(categoryButtons) do
 end
 
 -- Efeito hover nos botões de ação
-local actionButtons = {saveBtn, returnBtn, espBtn, serverHopBtn, rejoinBtn, infJumpBtn, decreaseBtn, increaseBtn, tpButton}
+local actionButtons = {saveBtn, returnBtn, espBtn, serverHopBtn, rejoinBtn, infJumpBtn, flyBtn, decreaseBtn, increaseBtn, tpButton, flyButton}
 for _, button in pairs(actionButtons) do
     button.MouseEnter:Connect(function()
         if button == decreaseBtn or button == increaseBtn then
             TweenService:Create(button, TweenInfo.new(0.2), {
                 Size = UDim2.new(0, 35, 0, 35)
             }):Play()
-        elseif button == tpButton then
+        elseif button == tpButton or button == flyButton then
             TweenService:Create(button, TweenInfo.new(0.2), {
                 Size = UDim2.new(0, 105, 0, 48)
             }):Play()
@@ -758,7 +919,7 @@ for _, button in pairs(actionButtons) do
             TweenService:Create(button, TweenInfo.new(0.2), {
                 Size = UDim2.new(0, 32, 0, 32)
             }):Play()
-        elseif button == tpButton then
+        elseif button == tpButton or button == flyButton then
             TweenService:Create(button, TweenInfo.new(0.2), {
                 Size = UDim2.new(0, 100, 0, 45)
             }):Play()
