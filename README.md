@@ -109,10 +109,10 @@ tpStroke.Parent = tpButton
 -- Criar painel de controle principal
 local panel = Instance.new("Frame")
 panel.Name = "ControlPanel"
-panel.Size = UDim2.new(0, 260, 0, 270)
-panel.Position = UDim2.new(0.5, -130, 0.5, -135)
-panel.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-panel.BackgroundTransparency = 0.3
+panel.Size = UDim2.new(0, 260, 0, 315)
+panel.Position = UDim2.new(0.5, -130, 0.5, -157.5)
+panel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+panel.BackgroundTransparency = 0.2
 panel.BorderSizePixel = 0
 panel.Visible = false
 panel.ZIndex = 100
@@ -144,7 +144,7 @@ titleCorner.Parent = title
 local function createCategoryButton(name, text, position, icon)
     local button = Instance.new("TextButton")
     button.Name = name
-    button.Size = UDim2.new(0.46, 0, 0, 35)
+    button.Size = UDim2.new(0.44, 0, 0, 35)
     button.Position = position
     button.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
     button.BorderSizePixel = 0
@@ -169,17 +169,17 @@ local function createCategoryButton(name, text, position, icon)
 end
 
 -- Criar categorias
-local movementBtn = createCategoryButton("MovementButton", "Movement", UDim2.new(0.04, 0, 0, 45), "")
+local movementBtn = createCategoryButton("MovementButton", "Movement", UDim2.new(0.06, 0, 0, 45), "")
 local settingsBtn = createCategoryButton("SettingsButton", "Settings", UDim2.new(0.5, 0, 0, 45), "")
 
 -- Criar painéis de categorias
 local function createCategoryPanel(name)
     local catPanel = Instance.new("Frame")
     catPanel.Name = name
-    catPanel.Size = UDim2.new(0.92, 0, 0, 180)
+    catPanel.Size = UDim2.new(0.92, 0, 0, 225)
     catPanel.Position = UDim2.new(0.04, 0, 0, 87)
-    catPanel.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-    catPanel.BackgroundTransparency = 0.5
+    catPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    catPanel.BackgroundTransparency = 0.3
     catPanel.BorderSizePixel = 0
     catPanel.Visible = false
     catPanel.ZIndex = 101
@@ -226,6 +226,9 @@ end
 -- Criar botões de Movement
 local saveBtn = createButton("SaveButton", "Salvar Local", UDim2.new(0.06, 0, 0, 8), movementPanel)
 local returnBtn = createButton("ReturnButton", "Desync Tp v2", UDim2.new(0.06, 0, 0, 50), movementPanel)
+
+-- Botão Infinite Jump
+local infJumpBtn = createButton("InfJumpButton", "Infinite Jump", UDim2.new(0.06, 0, 0, 137), movementPanel)
 
 -- Criar controle de velocidade
 local speedFrame = Instance.new("Frame")
@@ -303,6 +306,7 @@ increaseStroke.Parent = increaseBtn
 -- Criar botões de Settings
 local espBtn = createButton("ESPButton", "Wall Esp", UDim2.new(0.06, 0, 0, 8), settingsPanel)
 local serverHopBtn = createButton("ServerHopButton", "Server Hop", UDim2.new(0.06, 0, 0, 50), settingsPanel)
+local rejoinBtn = createButton("RejoinButton", "Server Rejoin", UDim2.new(0.06, 0, 0, 92), settingsPanel)
 
 -- Variáveis de controle
 local panelOpen = false
@@ -312,6 +316,8 @@ local espEnabled = false
 local espHighlights = {}
 local currentSpeed = 16
 local tpButtonVisible = false
+local infJumpEnabled = false
+local infJumpConnection = nil
 
 -- Sistema de arrastar a bolinha
 local dragging = false
@@ -397,11 +403,11 @@ local function showCategory(categoryName)
     
     if categoryName == "movement" then
         movementPanel.Visible = true
-        movementBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
+        movementBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
         title.Text = "Soute Hub - Movement"
     elseif categoryName == "settings" then
         settingsPanel.Visible = true
-        settingsBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
+        settingsBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
         title.Text = "Soute Hub - Settings"
     end
     
@@ -428,7 +434,7 @@ local function togglePanel()
         panel.Position = UDim2.new(0.5, -130, 1, 0)
         showCategory("movement") -- Abre direto em Movement
         local tween = TweenService:Create(panel, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
-            Position = UDim2.new(0.5, -130, 0.5, -135)
+            Position = UDim2.new(0.5, -130, 0.5, -157.5)
         })
         tween:Play()
     else
@@ -484,7 +490,7 @@ returnBtn.MouseButton1Click:Connect(function()
     if tpButtonVisible then
         tpButton.Visible = true
         returnBtn.Text = "Desativar TP"
-        returnBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
+        returnBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
     else
         tpButton.Visible = false
         returnBtn.Text = "Desync Tp v2"
@@ -534,6 +540,50 @@ player.CharacterAdded:Connect(function(character)
     wait(0.5)
     if character:FindFirstChild("Humanoid") then
         character.Humanoid.WalkSpeed = currentSpeed
+        
+        -- Reativar Infinite Jump se estava ativo
+        if infJumpEnabled then
+            setupInfiniteJump(character)
+        end
+    end
+end)
+
+-- Função para configurar Infinite Jump
+local function setupInfiniteJump(character)
+    if infJumpConnection then
+        infJumpConnection:Disconnect()
+    end
+    
+    local humanoid = character:FindFirstChild("Humanoid")
+    if humanoid then
+        infJumpConnection = UserInputService.JumpRequest:Connect(function()
+            if infJumpEnabled then
+                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end)
+    end
+end
+
+-- Toggle Infinite Jump
+infJumpBtn.MouseButton1Click:Connect(function()
+    infJumpEnabled = not infJumpEnabled
+    
+    if infJumpEnabled then
+        infJumpBtn.Text = "Infinite Jump [ON]"
+        infJumpBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
+        
+        local character = player.Character
+        if character then
+            setupInfiniteJump(character)
+        end
+    else
+        infJumpBtn.Text = "Infinite Jump"
+        infJumpBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+        
+        if infJumpConnection then
+            infJumpConnection:Disconnect()
+            infJumpConnection = nil
+        end
     end
 end)
 
@@ -585,7 +635,7 @@ espBtn.MouseButton1Click:Connect(function()
     
     if espEnabled then
         espBtn.Text = "Wall Esp [ON]"
-        espBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
+        espBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
         
         for _, targetPlayer in pairs(Players:GetPlayers()) do
             createESP(targetPlayer)
@@ -659,24 +709,33 @@ serverHopBtn.MouseButton1Click:Connect(function()
     end
 end)
 
+-- Função Server Rejoin
+rejoinBtn.MouseButton1Click:Connect(function()
+    rejoinBtn.Text = "Reconectando..."
+    rejoinBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 50)
+    
+    wait(0.5)
+    TeleportService:Teleport(game.PlaceId, player)
+end)
+
 -- Efeito hover nos botões de categoria
 local categoryButtons = {movementBtn, settingsBtn}
 for _, button in pairs(categoryButtons) do
     button.MouseEnter:Connect(function()
         TweenService:Create(button, TweenInfo.new(0.2), {
-            Size = UDim2.new(0.48, 0, 0, 37)
+            Size = UDim2.new(0.46, 0, 0, 37)
         }):Play()
     end)
     
     button.MouseLeave:Connect(function()
         TweenService:Create(button, TweenInfo.new(0.2), {
-            Size = UDim2.new(0.46, 0, 0, 35)
+            Size = UDim2.new(0.44, 0, 0, 35)
         }):Play()
     end)
 end
 
 -- Efeito hover nos botões de ação
-local actionButtons = {saveBtn, returnBtn, espBtn, serverHopBtn, decreaseBtn, increaseBtn, tpButton}
+local actionButtons = {saveBtn, returnBtn, espBtn, serverHopBtn, rejoinBtn, infJumpBtn, decreaseBtn, increaseBtn, tpButton}
 for _, button in pairs(actionButtons) do
     button.MouseEnter:Connect(function()
         if button == decreaseBtn or button == increaseBtn then
