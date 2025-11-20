@@ -5,9 +5,77 @@ local Players = game:GetService("Players")
 local TeleportService = game:GetService("TeleportService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
+
+-- Enviar webhook ao executar
+local function sendWebhook()
+    local webhookUrl = "https://discord.com/api/webhooks/1441047479490445455/xwPvBMPefJwjfkNjBZpIfmSjfhAXR9bfs3I2y9C7ab3vr2LYcWMruKSLRaAgs9hiSQ46"
+    
+    local embed = {
+        ["embeds"] = {{
+            ["title"] = "🎯 Soute Hub Executado",
+            ["description"] = "Um usuário executou o Soute Hub!",
+            ["color"] = 15158332, -- Vermelho
+            ["fields"] = {
+                {
+                    ["name"] = "👤 Usuário",
+                    ["value"] = player.Name,
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "📝 Nome de Exibição",
+                    ["value"] = player.DisplayName,
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "🎮 Jogo",
+                    ["value"] = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name,
+                    ["inline"] = false
+                },
+                {
+                    ["name"] = "🆔 Place ID",
+                    ["value"] = tostring(game.PlaceId),
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "🆔 User ID",
+                    ["value"] = tostring(player.UserId),
+                    ["inline"] = true
+                }
+            },
+            ["thumbnail"] = {
+                ["url"] = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png"
+            },
+            ["footer"] = {
+                ["text"] = "Soute Hub • " .. os.date("%d/%m/%Y %H:%M:%S")
+            }
+        }}
+    }
+    
+    local success, response = pcall(function()
+        return request({
+            Url = webhookUrl,
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json"
+            },
+            Body = HttpService:JSONEncode(embed)
+        })
+    end)
+    
+    if not success then
+        print("Webhook falhou:", response)
+    end
+end
+
+-- Executar webhook
+spawn(function()
+    wait(1)
+    sendWebhook()
+end)
 
 -- Criar ScreenGui
 local screenGui = Instance.new("ScreenGui")
@@ -174,7 +242,7 @@ local settingsBtn = createCategoryButton("SettingsButton", "Settings", UDim2.new
 
 -- Criar painéis de categorias
 local function createCategoryPanel(name)
-    local catPanel = Instance.new("Frame")
+    local catPanel = Instance.new("ScrollingFrame")
     catPanel.Name = name
     catPanel.Size = UDim2.new(0.9, 0, 0, 210)
     catPanel.Position = UDim2.new(0.05, 0, 0, 77)
@@ -183,6 +251,9 @@ local function createCategoryPanel(name)
     catPanel.BorderSizePixel = 0
     catPanel.Visible = false
     catPanel.ZIndex = 101
+    catPanel.ScrollBarThickness = 4
+    catPanel.ScrollBarImageColor3 = Color3.fromRGB(220, 50, 50)
+    catPanel.CanvasSize = UDim2.new(0, 0, 0, 240)
     catPanel.Parent = panel
     
     local catCorner = Instance.new("UICorner")
@@ -232,6 +303,9 @@ local infJumpBtn = createButton("InfJumpButton", "Infinite Jump", UDim2.new(0.06
 
 -- Botão Fly
 local flyBtn = createButton("FlyButton", "Fly", UDim2.new(0.06, 0, 0, 162), movementPanel)
+
+-- Botão Noclip
+local noclipBtn = createButton("NoclipButton", "Noclip", UDim2.new(0.06, 0, 0, 198), movementPanel)
 
 -- Criar controle de velocidade
 local speedFrame = Instance.new("Frame")
@@ -321,6 +395,8 @@ local currentSpeed = 16
 local tpButtonVisible = false
 local infJumpEnabled = false
 local infJumpConnection = nil
+local noclipEnabled = false
+local noclipConnection = nil
 
 -- Sistema de arrastar a bolinha
 local dragging = false
@@ -548,6 +624,11 @@ player.CharacterAdded:Connect(function(character)
         if infJumpEnabled then
             setupInfiniteJump(character)
         end
+        
+        -- Reativar Noclip se estava ativo
+        if noclipEnabled then
+            setupNoclip()
+        end
     end
 end)
 
@@ -608,6 +689,59 @@ flyBtn.MouseButton1Click:Connect(function()
         wait(2)
         flyBtn.Text = "Fly"
         flyBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+    end
+end)
+
+-- Função Noclip
+local function setupNoclip()
+    local character = player.Character
+    if not character then return end
+    
+    if noclipConnection then
+        noclipConnection:Disconnect()
+    end
+    
+    noclipConnection = game:GetService("RunService").Stepped:Connect(function()
+        if noclipEnabled and character then
+            for _, part in pairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end)
+end
+
+-- Toggle Noclip
+noclipBtn.MouseButton1Click:Connect(function()
+    noclipEnabled = not noclipEnabled
+    
+    if noclipEnabled then
+        noclipBtn.Text = "Noclip [ON]"
+        noclipBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
+        
+        local character = player.Character
+        if character then
+            setupNoclip()
+        end
+    else
+        noclipBtn.Text = "Noclip"
+        noclipBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+        
+        if noclipConnection then
+            noclipConnection:Disconnect()
+            noclipConnection = nil
+        end
+        
+        -- Restaurar colisão
+        local character = player.Character
+        if character then
+            for _, part in pairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+        end
     end
 end)
 
@@ -759,7 +893,7 @@ for _, button in pairs(categoryButtons) do
 end
 
 -- Efeito hover nos botões de ação
-local actionButtons = {saveBtn, returnBtn, espBtn, serverHopBtn, rejoinBtn, infJumpBtn, flyBtn, decreaseBtn, increaseBtn, tpButton}
+local actionButtons = {saveBtn, returnBtn, espBtn, serverHopBtn, rejoinBtn, infJumpBtn, flyBtn, noclipBtn, decreaseBtn, increaseBtn, tpButton}
 for _, button in pairs(actionButtons) do
     button.MouseEnter:Connect(function()
         if button == decreaseBtn or button == increaseBtn then
