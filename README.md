@@ -619,16 +619,18 @@ player.CharacterAdded:Connect(function(character)
     wait(0.5)
     if character:FindFirstChild("Humanoid") then
         character.Humanoid.WalkSpeed = currentSpeed
-        
-        -- Reativar Infinite Jump se estava ativo
-        if infJumpEnabled then
-            setupInfiniteJump(character)
-        end
-        
-        -- Reativar Noclip se estava ativo
-        if noclipEnabled then
-            setupNoclip()
-        end
+    end
+    
+    -- Reativar Infinite Jump se estava ativo
+    if infJumpEnabled then
+        wait(0.1)
+        setupInfiniteJump(character)
+    end
+    
+    -- Reativar Noclip se estava ativo
+    if noclipEnabled then
+        wait(0.1)
+        setupNoclip()
     end
 end)
 
@@ -704,7 +706,7 @@ local function setupNoclip()
     noclipConnection = game:GetService("RunService").Stepped:Connect(function()
         if noclipEnabled and character then
             for _, part in pairs(character:GetDescendants()) do
-                if part:IsA("BasePart") then
+                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
                     part.CanCollide = false
                 end
             end
@@ -733,13 +735,29 @@ noclipBtn.MouseButton1Click:Connect(function()
             noclipConnection = nil
         end
         
-        -- Restaurar colisão
+        -- Restaurar colisão corretamente
         local character = player.Character
         if character then
+            -- Esperar um pouco para o jogo resetar a física
+            wait(0.1)
+            
             for _, part in pairs(character:GetDescendants()) do
                 if part:IsA("BasePart") then
-                    part.CanCollide = true
+                    -- Resetar apenas partes que normalmente devem colidir
+                    if part.Name == "Head" or part.Name == "Torso" or part.Name == "UpperTorso" or 
+                       part.Name == "LowerTorso" or part.Name == "HumanoidRootPart" or
+                       part.Name:match("Arm") or part.Name:match("Leg") then
+                        part.CanCollide = true
+                    end
                 end
+            end
+            
+            -- Resetar a física do personagem
+            local humanoid = character:FindFirstChild("Humanoid")
+            if humanoid then
+                humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+                wait(0.1)
+                humanoid:ChangeState(Enum.HumanoidStateType.Running)
             end
         end
     end
