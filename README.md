@@ -617,8 +617,19 @@ end)
 -- Manter velocidade ao respawnar
 player.CharacterAdded:Connect(function(character)
     wait(0.5)
-    if character:FindFirstChild("Humanoid") then
-        character.Humanoid.WalkSpeed = currentSpeed
+    local humanoid = character:FindFirstChild("Humanoid")
+    
+    if humanoid then
+        humanoid.WalkSpeed = currentSpeed
+        
+        -- Monitorar estados para manter velocidade ao pular/cair
+        humanoid.StateChanged:Connect(function(oldState, newState)
+            if newState == Enum.HumanoidStateType.Landed or 
+               newState == Enum.HumanoidStateType.Running or
+               newState == Enum.HumanoidStateType.RunningNoPhysics then
+                humanoid.WalkSpeed = currentSpeed
+            end
+        end)
     end
     
     -- Reativar Infinite Jump se estava ativo
@@ -633,6 +644,20 @@ player.CharacterAdded:Connect(function(character)
         setupNoclip()
     end
 end)
+
+-- Manter velocidade também para o personagem atual
+if player.Character then
+    local humanoid = player.Character:FindFirstChild("Humanoid")
+    if humanoid then
+        humanoid.StateChanged:Connect(function(oldState, newState)
+            if newState == Enum.HumanoidStateType.Landed or 
+               newState == Enum.HumanoidStateType.Running or
+               newState == Enum.HumanoidStateType.RunningNoPhysics then
+                humanoid.WalkSpeed = currentSpeed
+            end
+        end)
+    end
+end
 
 -- Função para configurar Infinite Jump
 local function setupInfiniteJump(character)
