@@ -398,6 +398,8 @@ local infJumpConnection = nil
 local noclipEnabled = false
 local noclipConnection = nil
 local speedUpdateConnection = nil
+local infJumpUpdateConnection = nil
+local noclipUpdateConnection = nil
 
 -- Sistema de arrastar a bolinha
 local dragging = false
@@ -668,12 +670,23 @@ player.CharacterAdded:Connect(function(character)
     if character:FindFirstChild("Humanoid") then
         character.Humanoid.WalkSpeed = currentSpeed
         
+        -- Reativar Infinite Jump se estava ativo
         if infJumpEnabled then
+            wait(0.2) -- Pequeno delay adicional
             setupInfiniteJump(character)
+            if not infJumpUpdateConnection then
+                startInfJumpUpdater()
+            end
         end
         
+        -- Reativar Noclip se estava ativo
         if noclipEnabled then
+            -- Limpar estados antigos
+            originalCollisionStates = {}
             setupNoclip()
+            if not noclipUpdateConnection then
+                startNoclipUpdater()
+            end
         end
         
         if currentSpeed ~= 16 and not speedUpdateConnection then
@@ -698,6 +711,32 @@ local function setupInfiniteJump(character)
     end
 end
 
+-- Sistema de atualização automática do Infinite Jump a cada 0.5 segundos
+local function startInfJumpUpdater()
+    if infJumpUpdateConnection then
+        infJumpUpdateConnection:Disconnect()
+    end
+    
+    infJumpUpdateConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        wait(0.5)
+        if infJumpEnabled then
+            local character = player.Character
+            if character and character:FindFirstChild("Humanoid") then
+                -- Garante que o infinite jump continua funcionando
+                if not infJumpConnection or not infJumpConnection.Connected then
+                    setupInfiniteJump(character)
+                end
+                
+                -- Força o jump state quando espaço pressionado
+                local humanoid = character:FindFirstChild("Humanoid")
+                if humanoid and UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end
+        end
+    end)
+end
+
 -- Toggle Infinite Jump
 infJumpBtn.MouseButton1Click:Connect(function()
     infJumpEnabled = not infJumpEnabled
@@ -710,6 +749,8 @@ infJumpBtn.MouseButton1Click:Connect(function()
         if character then
             setupInfiniteJump(character)
         end
+        
+        startInfJumpUpdater()
     else
         infJumpBtn.Text = "Infinite Jump"
         infJumpBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
@@ -717,6 +758,11 @@ infJumpBtn.MouseButton1Click:Connect(function()
         if infJumpConnection then
             infJumpConnection:Disconnect()
             infJumpConnection = nil
+        end
+        
+        if infJumpUpdateConnection then
+            infJumpUpdateConnection:Disconnect()
+            infJumpUpdateConnection = nil
         end
     end
 end)
@@ -743,9 +789,20 @@ flyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- Função Noclip
+local originalCollisionStates = {}
+
 local function setupNoclip()
     local character = player.Character
     if not character then return end
+    
+    -- Salvar estados originais de colisão
+    if not next(originalCollisionStates) then
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                originalCollisionStates[part] = part.CanCollide
+            end
+        end
+    end
     
     if noclipConnection then
         noclipConnection:Disconnect()
@@ -756,6 +813,27 @@ local function setupNoclip()
             for _, part in pairs(character:GetDescendants()) do
                 if part:IsA("BasePart") then
                     part.CanCollide = false
+                end
+            end
+        end
+    end)
+end
+
+-- Sistema de atualização automática do Noclip a cada 0.5 segundos
+local function startNoclipUpdater()
+    if noclipUpdateConnection then
+        noclipUpdateConnection:Disconnect()
+    end
+    
+    noclipUpdateConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        wait(0.5)
+        if noclipEnabled then
+            local character = player.Character
+            if character then
+                for _, part in pairs(character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
                 end
             end
         end
@@ -774,6 +852,8 @@ noclipBtn.MouseButton1Click:Connect(function()
         if character then
             setupNoclip()
         end
+        
+        startNoclipUpdater()
     else
         noclipBtn.Text = "Noclip"
         noclipBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
@@ -783,15 +863,23 @@ noclipBtn.MouseButton1Click:Connect(function()
             noclipConnection = nil
         end
         
-        -- Restaurar colisão
+        if noclipUpdateConnection then
+            noclipUpdateConnection:Disconnect()
+            noclipUpdateConnection = nil
+        end
+        
+        -- Restaurar estados originais de colisão
         local character = player.Character
         if character then
-            for _, part in pairs(character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = true
+            for part, originalState in pairs(originalCollisionStates) do
+                if part and part.Parent then
+                    part.CanCollide = originalState
                 end
             end
         end
+        
+        -- Limpar tabela para próxima ativação
+        originalCollisionStates = {}
     end
 end)
 
@@ -889,41 +977,29 @@ ftfBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Função Server Hop
+-- Função Server Hop (Simplificada e corrigida)
 serverHopBtn.MouseButton1Click:Connect(function()
     serverHopBtn.Text = "Procurando..."
     serverHopBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 50)
     
     local success, result = pcall(function()
-        local currentGameId = game.PlaceId
+        local sfUrl = "https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=100"
+        local req = request({ Url = string.format(sfUrl, game.PlaceId) })
+        local body = HttpService:JSONDecode(req.Body)
         local servers = {}
         
-        local cursor = ""
-        repeat
-            local success, page = pcall(function()
-                return game:GetService("HttpService"):JSONDecode(
-                    game:HttpGet(string.format(
-                        "https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100&cursor=%s",
-                        currentGameId, cursor
-                    ))
-                )
-            end)
-            
-            if success and page then
-                for _, server in pairs(page.data) do
-                    if server.playing < server.maxPlayers and server.id ~= game.JobId then
-                        table.insert(servers, server.id)
+        if body and body.data then
+            for i, v in next, body.data do
+                if type(v) == "table" and tonumber(v.playing) and tonumber(v.maxPlayers) and v.id ~= game.JobId then
+                    if v.playing < v.maxPlayers then
+                        servers[#servers + 1] = v.id
                     end
                 end
-                cursor = page.nextPageCursor or ""
-            else
-                break
             end
-        until cursor == ""
+        end
         
         if #servers > 0 then
-            local randomServer = servers[math.random(1, #servers)]
-            TeleportService:TeleportToPlaceInstance(currentGameId, randomServer, player)
+            TeleportService:TeleportToPlaceInstance(game.PlaceId, servers[math.random(1, #servers)], player)
         else
             serverHopBtn.Text = "Sem servidores"
             wait(2)
@@ -934,6 +1010,7 @@ serverHopBtn.MouseButton1Click:Connect(function()
     
     if not success then
         serverHopBtn.Text = "Erro"
+        print("Server Hop Error:", result)
         wait(2)
         serverHopBtn.Text = "Server Hop"
         serverHopBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
