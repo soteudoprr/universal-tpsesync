@@ -126,7 +126,7 @@ textLabel.Font = Enum.Font.GothamBold
 textLabel.ZIndex = 11
 textLabel.Parent = orb
 
--- Animação de transição de cor da borda (vermelho -> roxo) - MAIS RÁPIDA
+-- Animação de transição de cor da borda (vermelho -> roxo)
 spawn(function()
     local hue = 0
     while wait(0.015) do
@@ -135,16 +135,13 @@ spawn(function()
             hue = 0
         end
         
-        -- Converter HSV para RGB (vermelho a roxo)
         local r, g, b
         if hue <= 300 then
-            -- Transição de vermelho (0°) para roxo (300°)
             local t = hue / 300
             r = 255
             g = 0
             b = math.floor(128 * t)
         else
-            -- Volta para vermelho
             local t = (hue - 300) / 60
             r = 255
             g = 0
@@ -215,7 +212,7 @@ titleCorner.CornerRadius = UDim.new(0, 12)
 titleCorner.Parent = title
 
 -- Criar botões de categoria
-local function createCategoryButton(name, text, position, icon)
+local function createCategoryButton(name, text, position)
     local button = Instance.new("TextButton")
     button.Name = name
     button.Size = UDim2.new(0.45, 0, 0, 20)
@@ -239,8 +236,8 @@ local function createCategoryButton(name, text, position, icon)
 end
 
 -- Criar categorias
-local movementBtn = createCategoryButton("MovementButton", "Movement", UDim2.new(0.05, 0, 0, 42), "")
-local settingsBtn = createCategoryButton("SettingsButton", "Settings", UDim2.new(0.5, 0, 0, 42), "")
+local movementBtn = createCategoryButton("MovementButton", "Movement", UDim2.new(0.05, 0, 0, 42))
+local settingsBtn = createCategoryButton("SettingsButton", "Settings", UDim2.new(0.5, 0, 0, 42))
 
 -- Criar painéis de categorias
 local function createCategoryPanel(name)
@@ -268,7 +265,6 @@ end
 local movementPanel = createCategoryPanel("MovementPanel")
 local settingsPanel = createCategoryPanel("SettingsPanel")
 
--- Ajustar altura do canvas para Settings
 settingsPanel.CanvasSize = UDim2.new(0, 0, 0, 236)
 
 -- Função para criar botões nas categorias
@@ -403,7 +399,6 @@ local spectateCorner = Instance.new("UICorner")
 spectateCorner.CornerRadius = UDim.new(0, 10)
 spectateCorner.Parent = spectateUI
 
--- Botão voltar (seta esquerda)
 local prevBtn = Instance.new("TextButton")
 prevBtn.Name = "PrevButton"
 prevBtn.Size = UDim2.new(0, 40, 0, 40)
@@ -421,7 +416,6 @@ local prevCorner = Instance.new("UICorner")
 prevCorner.CornerRadius = UDim.new(0, 8)
 prevCorner.Parent = prevBtn
 
--- Nome do jogador
 local spectateLabel = Instance.new("TextLabel")
 spectateLabel.Name = "SpectateLabel"
 spectateLabel.Size = UDim2.new(0, 240, 0, 40)
@@ -434,7 +428,6 @@ spectateLabel.Font = Enum.Font.GothamBold
 spectateLabel.ZIndex = 201
 spectateLabel.Parent = spectateUI
 
--- Botão avançar (seta direita)
 local nextBtn = Instance.new("TextButton")
 nextBtn.Name = "NextButton"
 nextBtn.Size = UDim2.new(0, 40, 0, 40)
@@ -475,8 +468,9 @@ local originalCameraSubject = nil
 local currentSpectatePlayer = nil
 local spectateCharacterConnections = {}
 local tracersEnabled = false
-local tracersFolder = nil
 local tracerConnections = {}
+local stickFigureESP = {}
+local originalCollisionStates = {}
 
 -- Sistema de arrastar a bolinha
 local dragging = false
@@ -592,14 +586,10 @@ local function togglePanel()
         panel.Visible = true
         panel.Position = UDim2.new(0.5, -120, 1, 0)
         showCategory("movement")
-        local tween = TweenService:Create(panel, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
-            Position = UDim2.new(0.5, -120, 0.5, -145)
-        })
+        local tween = TweenService:Create(panel, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Position = UDim2.new(0.5, -120, 0.5, -145)})
         tween:Play()
     else
-        local tween = TweenService:Create(panel, TweenInfo.new(0.2, Enum.EasingStyle.Back), {
-            Position = UDim2.new(0.5, -120, 1, 0)
-        })
+        local tween = TweenService:Create(panel, TweenInfo.new(0.2, Enum.EasingStyle.Back), {Position = UDim2.new(0.5, -120, 1, 0)})
         tween:Play()
         wait(0.2)
         panel.Visible = false
@@ -610,16 +600,9 @@ end
 -- Clique na bolinha
 orb.MouseButton1Click:Connect(function()
     if not dragging then
-        -- Animação de clique
         local originalSize = orb.Size
-        local shrinkTween = TweenService:Create(orb, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 40, 0, 40),
-            Rotation = 180
-        })
-        local expandTween = TweenService:Create(orb, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = originalSize,
-            Rotation = 360
-        })
+        local shrinkTween = TweenService:Create(orb, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, 40, 0, 40), Rotation = 180})
+        local expandTween = TweenService:Create(orb, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = originalSize, Rotation = 360})
         
         shrinkTween:Play()
         shrinkTween.Completed:Connect(function()
@@ -703,7 +686,7 @@ local function updateSpeed()
     end
 end
 
--- Sistema de atualização automática da velocidade a cada 0.5 segundos
+-- Sistema de atualização automática da velocidade
 local function startSpeedUpdater()
     if speedUpdateConnection then
         speedUpdateConnection:Disconnect()
@@ -741,36 +724,6 @@ increaseBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Manter velocidade ao respawnar
-player.CharacterAdded:Connect(function(character)
-    wait(0.5)
-    if character:FindFirstChild("Humanoid") then
-        character.Humanoid.WalkSpeed = currentSpeed
-        
-        -- Reativar Infinite Jump se estava ativo
-        if infJumpEnabled then
-            wait(0.2)
-            setupInfiniteJump(character)
-            if not infJumpUpdateConnection then
-                startInfJumpUpdater()
-            end
-        end
-        
-        -- Reativar Noclip se estava ativo
-        if noclipEnabled then
-            originalCollisionStates = {}
-            setupNoclip()
-            if not noclipUpdateConnection then
-                startNoclipUpdater()
-            end
-        end
-        
-        if currentSpeed ~= 16 and not speedUpdateConnection then
-            startSpeedUpdater()
-        end
-    end
-end)
-
 -- Função para configurar Infinite Jump
 local function setupInfiniteJump(character)
     if infJumpConnection then
@@ -787,7 +740,7 @@ local function setupInfiniteJump(character)
     end
 end
 
--- Sistema de atualização automática do Infinite Jump a cada 0.5 segundos
+-- Sistema de atualização automática do Infinite Jump
 local function startInfJumpUpdater()
     if infJumpUpdateConnection then
         infJumpUpdateConnection:Disconnect()
@@ -810,6 +763,83 @@ local function startInfJumpUpdater()
         end
     end)
 end
+
+-- Função Noclip
+local function setupNoclip()
+    local character = player.Character
+    if not character then return end
+    
+    if not next(originalCollisionStates) then
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                originalCollisionStates[part] = part.CanCollide
+            end
+        end
+    end
+    
+    if noclipConnection then
+        noclipConnection:Disconnect()
+    end
+    
+    noclipConnection = game:GetService("RunService").Stepped:Connect(function()
+        if noclipEnabled and character then
+            for _, part in pairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end)
+end
+
+-- Sistema de atualização automática do Noclip
+local function startNoclipUpdater()
+    if noclipUpdateConnection then
+        noclipUpdateConnection:Disconnect()
+    end
+    
+    noclipUpdateConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        wait(0.5)
+        if noclipEnabled then
+            local character = player.Character
+            if character then
+                for _, part in pairs(character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end
+    end)
+end
+
+-- Manter velocidade ao respawnar
+player.CharacterAdded:Connect(function(character)
+    wait(0.5)
+    if character:FindFirstChild("Humanoid") then
+        character.Humanoid.WalkSpeed = currentSpeed
+        
+        if infJumpEnabled then
+            wait(0.2)
+            setupInfiniteJump(character)
+            if not infJumpUpdateConnection then
+                startInfJumpUpdater()
+            end
+        end
+        
+        if noclipEnabled then
+            originalCollisionStates = {}
+            setupNoclip()
+            if not noclipUpdateConnection then
+                startNoclipUpdater()
+            end
+        end
+        
+        if currentSpeed ~= 16 and not speedUpdateConnection then
+            startSpeedUpdater()
+        end
+    end
+end)
 
 -- Toggle Infinite Jump
 infJumpBtn.MouseButton1Click:Connect(function()
@@ -861,57 +891,6 @@ flyBtn.MouseButton1Click:Connect(function()
         flyBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
     end
 end)
-
--- Função Noclip
-local originalCollisionStates = {}
-
-local function setupNoclip()
-    local character = player.Character
-    if not character then return end
-    
-    if not next(originalCollisionStates) then
-        for _, part in pairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                originalCollisionStates[part] = part.CanCollide
-            end
-        end
-    end
-    
-    if noclipConnection then
-        noclipConnection:Disconnect()
-    end
-    
-    noclipConnection = game:GetService("RunService").Stepped:Connect(function()
-        if noclipEnabled and character then
-            for _, part in pairs(character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                end
-            end
-        end
-    end)
-end
-
--- Sistema de atualização automática do Noclip a cada 0.5 segundos
-local function startNoclipUpdater()
-    if noclipUpdateConnection then
-        noclipUpdateConnection:Disconnect()
-    end
-    
-    noclipUpdateConnection = game:GetService("RunService").Heartbeat:Connect(function()
-        wait(0.5)
-        if noclipEnabled then
-            local character = player.Character
-            if character then
-                for _, part in pairs(character:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = false
-                    end
-                end
-            end
-        end
-    end)
-end
 
 -- Toggle Noclip
 noclipBtn.MouseButton1Click:Connect(function()
@@ -1025,7 +1004,7 @@ espBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Sistema de Tracers
+-- Sistema de Tracers e Stick Figure ESP
 local function createTracerLine()
     local line = Drawing.new("Line")
     line.Visible = false
@@ -1033,6 +1012,88 @@ local function createTracerLine()
     line.Color = Color3.new(1, 1, 1)
     line.Transparency = 1
     return line
+end
+
+local function createStickLine()
+    local line = Drawing.new("Line")
+    line.Visible = false
+    line.Thickness = 2
+    line.Color = Color3.new(1, 1, 1)
+    line.Transparency = 1
+    return line
+end
+
+local function createStickFigure(targetPlayer)
+    if stickFigureESP[targetPlayer] then return end
+    
+    stickFigureESP[targetPlayer] = {
+        torsoToHead = createStickLine(),
+        torsoToLeftArm = createStickLine(),
+        torsoToRightArm = createStickLine(),
+        torsoToLeftLeg = createStickLine(),
+        torsoToRightLeg = createStickLine(),
+        leftArmToHand = createStickLine(),
+        rightArmToHand = createStickLine(),
+        leftLegToFoot = createStickLine(),
+        rightLegToFoot = createStickLine()
+    }
+end
+
+local function removeStickFigure(targetPlayer)
+    if stickFigureESP[targetPlayer] then
+        for _, line in pairs(stickFigureESP[targetPlayer]) do
+            line:Remove()
+        end
+        stickFigureESP[targetPlayer] = nil
+    end
+end
+
+local function updateStickFigure(targetPlayer)
+    if not stickFigureESP[targetPlayer] then return end
+    
+    local character = targetPlayer.Character
+    if not character then return end
+    
+    local camera = workspace.CurrentCamera
+    local lines = stickFigureESP[targetPlayer]
+    
+    local head = character:FindFirstChild("Head")
+    local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+    local leftArm = character:FindFirstChild("Left Arm") or character:FindFirstChild("LeftUpperArm")
+    local rightArm = character:FindFirstChild("Right Arm") or character:FindFirstChild("RightUpperArm")
+    local leftLeg = character:FindFirstChild("Left Leg") or character:FindFirstChild("LeftUpperLeg")
+    local rightLeg = character:FindFirstChild("Right Leg") or character:FindFirstChild("RightUpperLeg")
+    local leftHand = character:FindFirstChild("LeftHand") or character:FindFirstChild("Left Arm")
+    local rightHand = character:FindFirstChild("RightHand") or character:FindFirstChild("Right Arm")
+    local leftFoot = character:FindFirstChild("LeftFoot") or character:FindFirstChild("Left Leg")
+    local rightFoot = character:FindFirstChild("RightFoot") or character:FindFirstChild("Right Leg")
+    
+    local function connect(line, part1, part2)
+        if part1 and part2 then
+            local pos1, onScreen1 = camera:WorldToViewportPoint(part1.Position)
+            local pos2, onScreen2 = camera:WorldToViewportPoint(part2.Position)
+            
+            if onScreen1 and onScreen2 then
+                line.From = Vector2.new(pos1.X, pos1.Y)
+                line.To = Vector2.new(pos2.X, pos2.Y)
+                line.Visible = true
+            else
+                line.Visible = false
+            end
+        else
+            line.Visible = false
+        end
+    end
+    
+    connect(lines.torsoToHead, torso, head)
+    connect(lines.torsoToLeftArm, torso, leftArm)
+    connect(lines.torsoToRightArm, torso, rightArm)
+    connect(lines.torsoToLeftLeg, torso, leftLeg)
+    connect(lines.torsoToRightLeg, torso, rightLeg)
+    connect(lines.leftArmToHand, leftArm, leftHand)
+    connect(lines.rightArmToHand, rightArm, rightHand)
+    connect(lines.leftLegToFoot, leftLeg, leftFoot)
+    connect(lines.rightLegToFoot, rightLeg, rightFoot)
 end
 
 local function clearTracers()
@@ -1045,6 +1106,10 @@ local function clearTracers()
         end
     end
     tracerConnections = {}
+    
+    for targetPlayer, _ in pairs(stickFigureESP) do
+        removeStickFigure(targetPlayer)
+    end
 end
 
 local function updateTracers()
@@ -1063,9 +1128,7 @@ local function updateTracers()
                 local vector, onScreen = camera:WorldToViewportPoint(rootPart.Position)
                 
                 if not tracerConnections[targetPlayer] then
-                    tracerConnections[targetPlayer] = {
-                        line = createTracerLine()
-                    }
+                    tracerConnections[targetPlayer] = {line = createTracerLine()}
                 end
                 
                 local line = tracerConnections[targetPlayer].line
@@ -1077,6 +1140,11 @@ local function updateTracers()
                 else
                     line.Visible = false
                 end
+                
+                if not stickFigureESP[targetPlayer] then
+                    createStickFigure(targetPlayer)
+                end
+                updateStickFigure(targetPlayer)
             end
         end
     end
@@ -1086,7 +1154,12 @@ local function setupTracers()
     clearTracers()
     
     if tracersEnabled then
-        -- Atualizar tracers continuamente
+        for _, targetPlayer in pairs(Players:GetPlayers()) do
+            if targetPlayer ~= player and targetPlayer.Character then
+                createStickFigure(targetPlayer)
+            end
+        end
+        
         local connection = game:GetService("RunService").RenderStepped:Connect(function()
             if tracersEnabled then
                 updateTracers()
@@ -1095,19 +1168,18 @@ local function setupTracers()
         
         table.insert(tracerConnections, {disconnect = connection})
         
-        -- Conectar aos novos jogadores
         Players.PlayerAdded:Connect(function(targetPlayer)
             if tracersEnabled and targetPlayer ~= player then
                 targetPlayer.CharacterAdded:Connect(function()
                     wait(0.5)
                     if tracersEnabled then
+                        createStickFigure(targetPlayer)
                         updateTracers()
                     end
                 end)
             end
         end)
         
-        -- Remover tracers de jogadores que saem
         Players.PlayerRemoving:Connect(function(targetPlayer)
             if tracerConnections[targetPlayer] then
                 if tracerConnections[targetPlayer].line then
@@ -1115,6 +1187,7 @@ local function setupTracers()
                 end
                 tracerConnections[targetPlayer] = nil
             end
+            removeStickFigure(targetPlayer)
         end)
     end
 end
@@ -1124,7 +1197,7 @@ tracersBtn.MouseButton1Click:Connect(function()
     tracersEnabled = not tracersEnabled
     
     if tracersEnabled then
-        tracersBtn.Text = "Tracers [ON]"
+        tracersBtn.Text = "Tracers+ESP [ON]"
         tracersBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
         setupTracers()
     else
@@ -1158,9 +1231,6 @@ ftfBtn.MouseButton1Click:Connect(function()
 end)
 
 -- Sistema de Spectate
-local currentSpectatePlayer = nil
-local spectateCharacterConnections = {}
-
 local function updateSpectateList()
     spectatePlayersList = {}
     for _, p in pairs(Players:GetPlayers()) do
@@ -1192,13 +1262,11 @@ local function spectatePlayer(targetPlayer)
         end
     end
     
-    -- Atualizar câmera imediatamente
     updateCamera()
     
-    -- Conectar ao CharacterAdded para quando o jogador respawnar
     table.insert(spectateCharacterConnections, targetPlayer.CharacterAdded:Connect(function(newCharacter)
         if spectateEnabled and currentSpectatePlayer == targetPlayer then
-            wait(0.5) -- Pequeno delay para garantir que o personagem carregou
+            wait(0.5)
             updateCamera()
         end
     end))
@@ -1299,14 +1367,14 @@ Players.PlayerRemoving:Connect(function()
     end
 end)
 
--- Função Server Hop (Simplificada e corrigida)
+-- Função Server Hop
 serverHopBtn.MouseButton1Click:Connect(function()
     serverHopBtn.Text = "Procurando..."
     serverHopBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 50)
     
     local success, result = pcall(function()
         local sfUrl = "https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=100"
-        local req = request({ Url = string.format(sfUrl, game.PlaceId) })
+        local req = request({Url = string.format(sfUrl, game.PlaceId)})
         local body = HttpService:JSONDecode(req.Body)
         local servers = {}
         
@@ -1352,15 +1420,11 @@ end)
 local categoryButtons = {movementBtn, settingsBtn}
 for _, button in pairs(categoryButtons) do
     button.MouseEnter:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.2), {
-            Size = UDim2.new(0.47, 0, 0, 22)
-        }):Play()
+        TweenService:Create(button, TweenInfo.new(0.2), {Size = UDim2.new(0.47, 0, 0, 22)}):Play()
     end)
     
     button.MouseLeave:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.2), {
-            Size = UDim2.new(0.45, 0, 0, 20)
-        }):Play()
+        TweenService:Create(button, TweenInfo.new(0.2), {Size = UDim2.new(0.45, 0, 0, 20)}):Play()
     end)
 end
 
@@ -1369,33 +1433,23 @@ local actionButtons = {saveBtn, returnBtn, espBtn, tracersBtn, ftfBtn, spectateB
 for _, button in pairs(actionButtons) do
     button.MouseEnter:Connect(function()
         if button == decreaseBtn or button == increaseBtn then
-            TweenService:Create(button, TweenInfo.new(0.2), {
-                Size = UDim2.new(0, 30, 0, 30)
-            }):Play()
+            TweenService:Create(button, TweenInfo.new(0.2), {Size = UDim2.new(0, 30, 0, 30)}):Play()
         elseif button == tpButton then
-            TweenService:Create(button, TweenInfo.new(0.2), {
-                Size = UDim2.new(0, 105, 0, 48)
-            }):Play()
+            TweenService:Create(button, TweenInfo.new(0.2), {Size = UDim2.new(0, 105, 0, 48)}):Play()
         else
-            TweenService:Create(button, TweenInfo.new(0.2), {
-                Size = UDim2.new(button.Size.X.Scale + 0.02, 0, 0, button.Size.Y.Offset + 2)
-            }):Play()
+            TweenService:Create(button, TweenInfo.new(0.2), {Size = UDim2.new(0.88, 0, 0, 32)}):Play()
         end
     end)
     
     button.MouseLeave:Connect(function()
         if button == decreaseBtn or button == increaseBtn then
-            TweenService:Create(button, TweenInfo.new(0.2), {
-                Size = UDim2.new(0, 28, 0, 28)
-            }):Play()
+            TweenService:Create(button, TweenInfo.new(0.2), {Size = UDim2.new(0, 28, 0, 28)}):Play()
         elseif button == tpButton then
-            TweenService:Create(button, TweenInfo.new(0.2), {
-                Size = UDim2.new(0, 100, 0, 45)
-            }):Play()
+            TweenService:Create(button, TweenInfo.new(0.2), {Size = UDim2.new(0, 100, 0, 45)}):Play()
         else
-            TweenService:Create(button, TweenInfo.new(0.2), {
-                Size = UDim2.new(0.88, 0, 0, 30)
-            }):Play()
+            TweenService:Create(button, TweenInfo.new(0.2), {Size = UDim2.new(0.88, 0, 0, 30)}):Play()
         end
     end)
 end
+
+print("Soute Hub carregado com sucesso!")
