@@ -269,7 +269,7 @@ local movementPanel = createCategoryPanel("MovementPanel")
 local settingsPanel = createCategoryPanel("SettingsPanel")
 
 -- Ajustar altura do canvas para Settings
-settingsPanel.CanvasSize = UDim2.new(0, 0, 0, 160)
+settingsPanel.CanvasSize = UDim2.new(0, 0, 0, 236)
 
 -- Função para criar botões nas categorias
 local function createButton(name, text, position, parent)
@@ -381,9 +381,76 @@ increaseStroke.Parent = increaseBtn
 
 -- Criar botões de Settings
 local espBtn = createButton("ESPButton", "Wall Esp", UDim2.new(0.06, 0, 0, 7), settingsPanel)
-local ftfBtn = createButton("FTFButton", "FTF 3.0.4", UDim2.new(0.06, 0, 0, 43), settingsPanel)
-local serverHopBtn = createButton("ServerHopButton", "Server Hop", UDim2.new(0.06, 0, 0, 79), settingsPanel)
-local rejoinBtn = createButton("RejoinButton", "Server Rejoin", UDim2.new(0.06, 0, 0, 115), settingsPanel)
+local tracersBtn = createButton("TracersButton", "Tracers", UDim2.new(0.06, 0, 0, 43), settingsPanel)
+local ftfBtn = createButton("FTFButton", "FTF 3.0.4", UDim2.new(0.06, 0, 0, 79), settingsPanel)
+local spectateBtn = createButton("SpectateButton", "Spectate Players", UDim2.new(0.06, 0, 0, 115), settingsPanel)
+local serverHopBtn = createButton("ServerHopButton", "Server Hop", UDim2.new(0.06, 0, 0, 151), settingsPanel)
+local rejoinBtn = createButton("RejoinButton", "Server Rejoin", UDim2.new(0.06, 0, 0, 187), settingsPanel)
+
+-- Criar UI de Spectate
+local spectateUI = Instance.new("Frame")
+spectateUI.Name = "SpectateUI"
+spectateUI.Size = UDim2.new(0, 350, 0, 50)
+spectateUI.Position = UDim2.new(0.5, -175, 0, 20)
+spectateUI.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+spectateUI.BackgroundTransparency = 0.3
+spectateUI.BorderSizePixel = 0
+spectateUI.Visible = false
+spectateUI.ZIndex = 200
+spectateUI.Parent = screenGui
+
+local spectateCorner = Instance.new("UICorner")
+spectateCorner.CornerRadius = UDim.new(0, 10)
+spectateCorner.Parent = spectateUI
+
+-- Botão voltar (seta esquerda)
+local prevBtn = Instance.new("TextButton")
+prevBtn.Name = "PrevButton"
+prevBtn.Size = UDim2.new(0, 40, 0, 40)
+prevBtn.Position = UDim2.new(0, 5, 0.5, -20)
+prevBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+prevBtn.BorderSizePixel = 0
+prevBtn.Text = "<<"
+prevBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+prevBtn.TextSize = 18
+prevBtn.Font = Enum.Font.GothamBold
+prevBtn.ZIndex = 201
+prevBtn.Parent = spectateUI
+
+local prevCorner = Instance.new("UICorner")
+prevCorner.CornerRadius = UDim.new(0, 8)
+prevCorner.Parent = prevBtn
+
+-- Nome do jogador
+local spectateLabel = Instance.new("TextLabel")
+spectateLabel.Name = "SpectateLabel"
+spectateLabel.Size = UDim2.new(0, 240, 0, 40)
+spectateLabel.Position = UDim2.new(0.5, -120, 0.5, -20)
+spectateLabel.BackgroundTransparency = 1
+spectateLabel.Text = "xsmih_xp"
+spectateLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+spectateLabel.TextSize = 16
+spectateLabel.Font = Enum.Font.GothamBold
+spectateLabel.ZIndex = 201
+spectateLabel.Parent = spectateUI
+
+-- Botão avançar (seta direita)
+local nextBtn = Instance.new("TextButton")
+nextBtn.Name = "NextButton"
+nextBtn.Size = UDim2.new(0, 40, 0, 40)
+nextBtn.Position = UDim2.new(1, -45, 0.5, -20)
+nextBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+nextBtn.BorderSizePixel = 0
+nextBtn.Text = ">>"
+nextBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+nextBtn.TextSize = 18
+nextBtn.Font = Enum.Font.GothamBold
+nextBtn.ZIndex = 201
+nextBtn.Parent = spectateUI
+
+local nextCorner = Instance.new("UICorner")
+nextCorner.CornerRadius = UDim.new(0, 8)
+nextCorner.Parent = nextBtn
 
 -- Variáveis de controle
 local panelOpen = false
@@ -400,6 +467,16 @@ local noclipConnection = nil
 local speedUpdateConnection = nil
 local infJumpUpdateConnection = nil
 local noclipUpdateConnection = nil
+local spectateEnabled = false
+local spectateIndex = 1
+local spectatePlayersList = {}
+local originalCameraCFrame = nil
+local originalCameraSubject = nil
+local currentSpectatePlayer = nil
+local spectateCharacterConnections = {}
+local tracersEnabled = false
+local tracersFolder = nil
+local tracerConnections = {}
 
 -- Sistema de arrastar a bolinha
 local dragging = false
@@ -672,7 +749,7 @@ player.CharacterAdded:Connect(function(character)
         
         -- Reativar Infinite Jump se estava ativo
         if infJumpEnabled then
-            wait(0.2) -- Pequeno delay adicional
+            wait(0.2)
             setupInfiniteJump(character)
             if not infJumpUpdateConnection then
                 startInfJumpUpdater()
@@ -681,7 +758,6 @@ player.CharacterAdded:Connect(function(character)
         
         -- Reativar Noclip se estava ativo
         if noclipEnabled then
-            -- Limpar estados antigos
             originalCollisionStates = {}
             setupNoclip()
             if not noclipUpdateConnection then
@@ -722,12 +798,10 @@ local function startInfJumpUpdater()
         if infJumpEnabled then
             local character = player.Character
             if character and character:FindFirstChild("Humanoid") then
-                -- Garante que o infinite jump continua funcionando
                 if not infJumpConnection or not infJumpConnection.Connected then
                     setupInfiniteJump(character)
                 end
                 
-                -- Força o jump state quando espaço pressionado
                 local humanoid = character:FindFirstChild("Humanoid")
                 if humanoid and UserInputService:IsKeyDown(Enum.KeyCode.Space) then
                     humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
@@ -795,7 +869,6 @@ local function setupNoclip()
     local character = player.Character
     if not character then return end
     
-    -- Salvar estados originais de colisão
     if not next(originalCollisionStates) then
         for _, part in pairs(character:GetDescendants()) do
             if part:IsA("BasePart") then
@@ -868,7 +941,6 @@ noclipBtn.MouseButton1Click:Connect(function()
             noclipUpdateConnection = nil
         end
         
-        -- Restaurar estados originais de colisão
         local character = player.Character
         if character then
             for part, originalState in pairs(originalCollisionStates) do
@@ -878,7 +950,6 @@ noclipBtn.MouseButton1Click:Connect(function()
             end
         end
         
-        -- Limpar tabela para próxima ativação
         originalCollisionStates = {}
     end
 end)
@@ -954,6 +1025,115 @@ espBtn.MouseButton1Click:Connect(function()
     end
 end)
 
+-- Sistema de Tracers
+local function createTracerLine()
+    local line = Drawing.new("Line")
+    line.Visible = false
+    line.Thickness = 1
+    line.Color = Color3.new(1, 1, 1)
+    line.Transparency = 1
+    return line
+end
+
+local function clearTracers()
+    for _, connection in pairs(tracerConnections) do
+        if connection.line then
+            connection.line:Remove()
+        end
+        if connection.disconnect then
+            connection.disconnect:Disconnect()
+        end
+    end
+    tracerConnections = {}
+end
+
+local function updateTracers()
+    if not tracersEnabled then return end
+    
+    local camera = workspace.CurrentCamera
+    local viewportSize = camera.ViewportSize
+    local bottomCenter = Vector2.new(viewportSize.X / 2, viewportSize.Y)
+    
+    for _, targetPlayer in pairs(Players:GetPlayers()) do
+        if targetPlayer ~= player and targetPlayer.Character then
+            local character = targetPlayer.Character
+            local rootPart = character:FindFirstChild("HumanoidRootPart")
+            
+            if rootPart then
+                local vector, onScreen = camera:WorldToViewportPoint(rootPart.Position)
+                
+                if not tracerConnections[targetPlayer] then
+                    tracerConnections[targetPlayer] = {
+                        line = createTracerLine()
+                    }
+                end
+                
+                local line = tracerConnections[targetPlayer].line
+                
+                if onScreen then
+                    line.From = bottomCenter
+                    line.To = Vector2.new(vector.X, vector.Y)
+                    line.Visible = true
+                else
+                    line.Visible = false
+                end
+            end
+        end
+    end
+end
+
+local function setupTracers()
+    clearTracers()
+    
+    if tracersEnabled then
+        -- Atualizar tracers continuamente
+        local connection = game:GetService("RunService").RenderStepped:Connect(function()
+            if tracersEnabled then
+                updateTracers()
+            end
+        end)
+        
+        table.insert(tracerConnections, {disconnect = connection})
+        
+        -- Conectar aos novos jogadores
+        Players.PlayerAdded:Connect(function(targetPlayer)
+            if tracersEnabled and targetPlayer ~= player then
+                targetPlayer.CharacterAdded:Connect(function()
+                    wait(0.5)
+                    if tracersEnabled then
+                        updateTracers()
+                    end
+                end)
+            end
+        end)
+        
+        -- Remover tracers de jogadores que saem
+        Players.PlayerRemoving:Connect(function(targetPlayer)
+            if tracerConnections[targetPlayer] then
+                if tracerConnections[targetPlayer].line then
+                    tracerConnections[targetPlayer].line:Remove()
+                end
+                tracerConnections[targetPlayer] = nil
+            end
+        end)
+    end
+end
+
+-- Toggle Tracers
+tracersBtn.MouseButton1Click:Connect(function()
+    tracersEnabled = not tracersEnabled
+    
+    if tracersEnabled then
+        tracersBtn.Text = "Tracers [ON]"
+        tracersBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
+        setupTracers()
+    else
+        tracersBtn.Text = "Tracers"
+        tracersBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+        clearTracers()
+    end
+end)
+
 -- Executar FTF 3.0.4
 ftfBtn.MouseButton1Click:Connect(function()
     ftfBtn.Text = "Carregando..."
@@ -974,6 +1154,148 @@ ftfBtn.MouseButton1Click:Connect(function()
         wait(2)
         ftfBtn.Text = "FTF 3.0.4"
         ftfBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+    end
+end)
+
+-- Sistema de Spectate
+local currentSpectatePlayer = nil
+local spectateCharacterConnections = {}
+
+local function updateSpectateList()
+    spectatePlayersList = {}
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= player then
+            table.insert(spectatePlayersList, p)
+        end
+    end
+end
+
+local function clearSpectateConnections()
+    for _, connection in pairs(spectateCharacterConnections) do
+        connection:Disconnect()
+    end
+    spectateCharacterConnections = {}
+end
+
+local function spectatePlayer(targetPlayer)
+    if not targetPlayer then return end
+    
+    clearSpectateConnections()
+    currentSpectatePlayer = targetPlayer
+    spectateLabel.Text = targetPlayer.Name
+    
+    local function updateCamera()
+        local character = targetPlayer.Character
+        if character and character:FindFirstChild("Humanoid") then
+            local camera = workspace.CurrentCamera
+            camera.CameraSubject = character.Humanoid
+        end
+    end
+    
+    -- Atualizar câmera imediatamente
+    updateCamera()
+    
+    -- Conectar ao CharacterAdded para quando o jogador respawnar
+    table.insert(spectateCharacterConnections, targetPlayer.CharacterAdded:Connect(function(newCharacter)
+        if spectateEnabled and currentSpectatePlayer == targetPlayer then
+            wait(0.5) -- Pequeno delay para garantir que o personagem carregou
+            updateCamera()
+        end
+    end))
+end
+
+local function stopSpectate()
+    clearSpectateConnections()
+    currentSpectatePlayer = nil
+    
+    local camera = workspace.CurrentCamera
+    if originalCameraSubject then
+        camera.CameraSubject = originalCameraSubject
+    elseif player.Character and player.Character:FindFirstChild("Humanoid") then
+        camera.CameraSubject = player.Character.Humanoid
+    end
+    camera.CameraType = Enum.CameraType.Custom
+end
+
+-- Toggle Spectate
+spectateBtn.MouseButton1Click:Connect(function()
+    spectateEnabled = not spectateEnabled
+    
+    if spectateEnabled then
+        spectateBtn.Text = "Spectate [ON]"
+        spectateBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
+        spectateUI.Visible = true
+        
+        local camera = workspace.CurrentCamera
+        originalCameraCFrame = camera.CFrame
+        originalCameraSubject = camera.CameraSubject
+        camera.CameraType = Enum.CameraType.Custom
+        
+        updateSpectateList()
+        if #spectatePlayersList > 0 then
+            spectateIndex = 1
+            spectatePlayer(spectatePlayersList[spectateIndex])
+        else
+            spectateLabel.Text = "Nenhum jogador"
+        end
+    else
+        spectateBtn.Text = "Spectate Players"
+        spectateBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+        spectateUI.Visible = false
+        stopSpectate()
+    end
+end)
+
+-- Botão anterior (spectate)
+prevBtn.MouseButton1Click:Connect(function()
+    if not spectateEnabled or #spectatePlayersList == 0 then return end
+    
+    spectateIndex = spectateIndex - 1
+    if spectateIndex < 1 then
+        spectateIndex = #spectatePlayersList
+    end
+    
+    updateSpectateList()
+    if spectatePlayersList[spectateIndex] then
+        spectatePlayer(spectatePlayersList[spectateIndex])
+    end
+end)
+
+-- Botão próximo (spectate)
+nextBtn.MouseButton1Click:Connect(function()
+    if not spectateEnabled or #spectatePlayersList == 0 then return end
+    
+    spectateIndex = spectateIndex + 1
+    if spectateIndex > #spectatePlayersList then
+        spectateIndex = 1
+    end
+    
+    updateSpectateList()
+    if spectatePlayersList[spectateIndex] then
+        spectatePlayer(spectatePlayersList[spectateIndex])
+    end
+end)
+
+-- Atualizar lista quando jogadores entram/saem
+Players.PlayerAdded:Connect(function()
+    if spectateEnabled then
+        wait(1)
+        updateSpectateList()
+    end
+end)
+
+Players.PlayerRemoving:Connect(function()
+    if spectateEnabled then
+        updateSpectateList()
+        if #spectatePlayersList == 0 then
+            spectateLabel.Text = "Nenhum jogador"
+            stopSpectate()
+        elseif spectateIndex > #spectatePlayersList then
+            spectateIndex = 1
+            if spectatePlayersList[spectateIndex] then
+                spectatePlayer(spectatePlayersList[spectateIndex])
+            end
+        end
     end
 end)
 
@@ -1043,7 +1365,7 @@ for _, button in pairs(categoryButtons) do
 end
 
 -- Efeito hover nos botões de ação
-local actionButtons = {saveBtn, returnBtn, espBtn, ftfBtn, serverHopBtn, rejoinBtn, infJumpBtn, flyBtn, noclipBtn, decreaseBtn, increaseBtn, tpButton}
+local actionButtons = {saveBtn, returnBtn, espBtn, tracersBtn, ftfBtn, spectateBtn, serverHopBtn, rejoinBtn, infJumpBtn, flyBtn, noclipBtn, decreaseBtn, increaseBtn, tpButton}
 for _, button in pairs(actionButtons) do
     button.MouseEnter:Connect(function()
         if button == decreaseBtn or button == increaseBtn then
