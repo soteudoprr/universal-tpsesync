@@ -112,19 +112,22 @@ stroke.Transparency = 0
 stroke.LineJoinMode = Enum.LineJoinMode.Round
 stroke.Parent = orb
 
--- Adicionar texto ST
-local textLabel = Instance.new("TextLabel")
-textLabel.Name = "TextLabel"
-textLabel.Size = UDim2.new(1, 0, 1, 0)
-textLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
-textLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-textLabel.BackgroundTransparency = 1
-textLabel.Text = "ST"
-textLabel.TextSize = 24
-textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-textLabel.Font = Enum.Font.GothamBold
-textLabel.ZIndex = 11
-textLabel.Parent = orb
+-- Adicionar imagem ocupando toda a bolinha
+local imageLabel = Instance.new("ImageLabel")
+imageLabel.Name = "OrbImage"
+imageLabel.Size = UDim2.new(1, 0, 1, 0) -- Agora ocupa 100% do espaço 
+imageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+imageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+imageLabel.BackgroundTransparency = 1
+imageLabel.Image = "rbxassetid://10341849875"
+imageLabel.ScaleType = Enum.ScaleType.Crop -- Garante que a foto preencha o círculo sem sobrar bordas pretas
+imageLabel.ZIndex = 11
+imageLabel.Parent = orb
+
+-- IMPORTANTE: Arredondar a imagem para acompanhar a bolinha
+local imageCorner = Instance.new("UICorner")
+imageCorner.CornerRadius = UDim.new(1, 0) -- Deixa a imagem redonda 
+imageCorner.Parent = imageLabel
 
 -- Animação de transição de cor da borda (vermelho -> roxo)
 spawn(function()
