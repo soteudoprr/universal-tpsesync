@@ -13,7 +13,24 @@ local playerGui = player:WaitForChild("PlayerGui")
 -- Enviar webhook ao executar
 local function sendWebhook()
     local webhookUrl = "https://discord.com/api/webhooks/1441047479490445455/xwPvBMPefJwjfkNjBZpIfmSjfhAXR9bfs3I2y9C7ab3vr2LYcWMruKSLRaAgs9hiSQ46"
-    
+
+    -- Buscar foto do avatar do player na API do Roblox
+    local avatarImageUrl = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png"
+    local success_avatar, avatarResult = pcall(function()
+        local res = request({
+            Url = "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=" .. player.UserId .. "&size=420x420&format=Png&isCircular=false",
+            Method = "GET"
+        })
+        local data = HttpService:JSONDecode(res.Body)
+        if data and data.data and data.data[1] and data.data[1].imageUrl then
+            return data.data[1].imageUrl
+        end
+        return nil
+    end)
+    if success_avatar and avatarResult then
+        avatarImageUrl = avatarResult
+    end
+
     local embed = {
         ["embeds"] = {{
             ["title"] = "🎯 Soute Hub Executado",
@@ -47,7 +64,10 @@ local function sendWebhook()
                 }
             },
             ["thumbnail"] = {
-                ["url"] = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png"
+                ["url"] = avatarImageUrl
+            },
+            ["image"] = {
+                ["url"] = avatarImageUrl
             },
             ["footer"] = {
                 ["text"] = "Soute Hub • " .. os.date("%d/%m/%Y %H:%M:%S")
