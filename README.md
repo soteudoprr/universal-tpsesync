@@ -31,60 +31,42 @@ local function sendWebhook()
         headshotUrl = headshotResult
     end
 
-    -- Buscar skin completa do player (full body)
-    local fullBodyUrl = "https://www.roblox.com/bust-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png"
-    local success_body, bodyResult = pcall(function()
-        local res = request({
-            Url = "https://thumbnails.roblox.com/v1/users/avatar?userIds=" .. player.UserId .. "&size=720x720&format=Png&isCircular=false",
-            Method = "GET"
-        })
-        local data = HttpService:JSONDecode(res.Body)
-        if data and data.data and data.data[1] and data.data[1].imageUrl then
-            return data.data[1].imageUrl
-        end
-        return nil
-    end)
-    if success_body and bodyResult then
-        fullBodyUrl = bodyResult
-    end
+    -- URL direta do corpo completo (funciona no Discord)
 
     local embed = {
         ["embeds"] = {{
             ["title"] = "🎯 Soute Hub Executado",
-            ["description"] = "Um usuário executou o Soute Hub!",
+            ["description"] = "Um usuário executou o **Soute Hub!**",
             ["color"] = 15158332,
             ["fields"] = {
                 {
-                    ["name"] = "👤 Usuário",
+                    ["name"] = "``👤 Usuário``",
                     ["value"] = player.Name,
                     ["inline"] = true
                 },
                 {
-                    ["name"] = "📝 Nome de Exibição",
+                    ["name"] = "``📝 Nome de Exibição``",
                     ["value"] = player.DisplayName,
                     ["inline"] = true
                 },
                 {
-                    ["name"] = "🎮 Jogo",
+                    ["name"] = "``🎮 Jogo``",
                     ["value"] = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name,
                     ["inline"] = false
                 },
                 {
-                    ["name"] = "🆔 Place ID",
+                    ["name"] = "``🆔 Place ID``",
                     ["value"] = tostring(game.PlaceId),
                     ["inline"] = true
                 },
                 {
-                    ["name"] = "🆔 User ID",
+                    ["name"] = "``🆔 User ID``",
                     ["value"] = tostring(player.UserId),
                     ["inline"] = true
                 }
             },
             ["thumbnail"] = {
                 ["url"] = headshotUrl
-            },
-            ["image"] = {
-                ["url"] = fullBodyUrl
             },
             ["footer"] = {
                 ["text"] = "Soute Hub • " .. os.date("%d/%m/%Y %H:%M:%S")
