@@ -14,9 +14,9 @@ local playerGui = player:WaitForChild("PlayerGui")
 local function sendWebhook()
     local webhookUrl = "https://discord.com/api/webhooks/1441047479490445455/xwPvBMPefJwjfkNjBZpIfmSjfhAXR9bfs3I2y9C7ab3vr2LYcWMruKSLRaAgs9hiSQ46"
 
-    -- Buscar foto do avatar do player na API do Roblox
-    local avatarImageUrl = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png"
-    local success_avatar, avatarResult = pcall(function()
+    -- Buscar headshot do player (thumbnail)
+    local headshotUrl = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png"
+    local success_headshot, headshotResult = pcall(function()
         local res = request({
             Url = "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=" .. player.UserId .. "&size=420x420&format=Png&isCircular=false",
             Method = "GET"
@@ -27,8 +27,25 @@ local function sendWebhook()
         end
         return nil
     end)
-    if success_avatar and avatarResult then
-        avatarImageUrl = avatarResult
+    if success_headshot and headshotResult then
+        headshotUrl = headshotResult
+    end
+
+    -- Buscar skin completa do player (full body)
+    local fullBodyUrl = "https://www.roblox.com/bust-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png"
+    local success_body, bodyResult = pcall(function()
+        local res = request({
+            Url = "https://thumbnails.roblox.com/v1/users/avatar?userIds=" .. player.UserId .. "&size=720x720&format=Png&isCircular=false",
+            Method = "GET"
+        })
+        local data = HttpService:JSONDecode(res.Body)
+        if data and data.data and data.data[1] and data.data[1].imageUrl then
+            return data.data[1].imageUrl
+        end
+        return nil
+    end)
+    if success_body and bodyResult then
+        fullBodyUrl = bodyResult
     end
 
     local embed = {
@@ -64,10 +81,10 @@ local function sendWebhook()
                 }
             },
             ["thumbnail"] = {
-                ["url"] = avatarImageUrl
+                ["url"] = headshotUrl
             },
             ["image"] = {
-                ["url"] = avatarImageUrl
+                ["url"] = fullBodyUrl
             },
             ["footer"] = {
                 ["text"] = "Soute Hub • " .. os.date("%d/%m/%Y %H:%M:%S")
